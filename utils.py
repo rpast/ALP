@@ -6,7 +6,7 @@ import ast
 from sqlite3 import Error
 
 
-## DB utilities
+## DB utilities ##
 
 def create_connection(db_file):
     """ create a database connection to the SQLite database
@@ -37,8 +37,23 @@ def create_table(conn, create_table_sql):
         print(e)
 
 
+def parse_tables(conn):
+    """Parse the tables in the database
+    :param conn: Connection object
+    :return:
+    """
+    try:
+        c = conn.cursor()
+        c.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        return c.fetchall()
+    except Error as e:
+        print(e)
 
-## Processing utilities
+
+
+
+## Processing utilities ##
+
 def split_contents(x):
     """Split contents into number of chunks defined by split_factor
     if split factor = 2 then split contents into 2 chunks
@@ -55,7 +70,7 @@ def split_contents(x):
     #     return [contents]
 
 
-## OAI utilities
+## OAI utilities ##
 
 # Count tokens for each chapter
 def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
