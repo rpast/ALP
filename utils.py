@@ -79,6 +79,45 @@ def write_db(conn, query):
         print(e)
 
 
+def insert_session(conn, sname, sdate):
+    """Insert session data into the database
+    :param conn: Connection object
+    :param sname: session name
+    :param sid: session id
+    :param sdate: session date
+    :return:
+    """
+    try:
+        c = conn.cursor()
+        # if session name already in the session table, then don't insert and return info
+        c.execute(f"SELECT * FROM session WHERE session_name = '{sname}'")
+        if c.fetchall():
+            print(f"Session: \"{sname}\" already in the database")
+            return None
+        elif sname.find('-'):
+            print("Session name cannot contain \"-\",\"!\",\"?\",\".\" characters")
+            return None
+        else:
+            c.execute(f"INSERT INTO session VALUES ('{sname}', '{sid}', '{sdate}')")
+            conn.commit()
+    except Error as e:
+        print(e)
+
+
+def insert_context(conn, session_name, context_df):
+    """Insert context data into the database
+    :param conn: Connection object
+    :param session_name: session name
+    :param context_df: context dataframe
+    :return:
+    """
+    try:
+        context_df.to_sql(f'context_{session_name}', conn, if_exists='replace', index=False)
+        print (f"Context table for session: \"{session_name}\" created")
+        return True
+    except Error as e:
+        print(e)
+        return False
 
 
 ## Processing utilities ##

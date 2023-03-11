@@ -13,15 +13,13 @@ IN_DOC_PTH = IN_PTH / TITLE
 
 ## SQL parameters ##
 # Session name is defined by the user
-# Session id is defined by the current time in UNIX timestamp
 
 ## Create a table in the database where session data will be stored
 DB_PTH = D_PTH / 'tsun.db'
 
-SESSION_TABLE_SQL = """ 
-    CREATE TABLE IF NOT EXISTS session (
+INTERACTION_TABLE_SQL = """ 
+    CREATE TABLE IF NOT EXISTS interaction (
         session_name,
-        session_id, 
         session_date, 
         id, 
         created, 
@@ -33,11 +31,19 @@ SESSION_TABLE_SQL = """
     ) 
     """
 
+
 CONTEXT_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS context (
-        session_id,
+        session_name,
         chapter_title,
         chapter_text,
         chapter_token_no,
         chapter_embeddings        
+        )"""
+
+
+SESSION_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS session (
+        session_name,
+        session_date
         )"""
