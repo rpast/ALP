@@ -14,7 +14,7 @@ Question_answering_using_embeddings: https://github.com/openai/openai-cookbook/b
 3. User's query gets measured against chunks and the one with the lowest distance score gets chosen (cosine distance).
 4. Closest chunk and query get injected into the input for API call to ```gpt-3.5-turbo```. 
 
-<img src="https://github.com/rpast/tsunset/blob/master/tsun_poc.png?raw=true"></img>
+<img src="https://github.com/rpast/tsunset/blob/master/static/tsun_poc.png?raw=true"></img>
 
 
 ## Todo
