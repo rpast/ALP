@@ -5,9 +5,10 @@ from pathlib import Path
 
 
 ## General parameters ##
-PTH = Path('./data')
+IN_PTH = Path('./input')
+D_PTH = Path('./data')
 TITLE = 'biological-cognition.pdf'
-DOC_PTH = PTH / TITLE
+IN_DOC_PTH = IN_PTH / TITLE
 
 
 ## SQL parameters ##
@@ -15,11 +16,11 @@ DOC_PTH = PTH / TITLE
 # Session id is defined by the current time in UNIX timestamp
 
 ## Create a table in the database where session data will be stored
-DB_PTH = PTH / 'tsun.db'
+DB_PTH = D_PTH / 'tsun.db'
 
 SESSION_TABLE_SQL = """ 
     CREATE TABLE IF NOT EXISTS session (
-        session_name
+        session_name,
         session_id, 
         session_date, 
         id, 

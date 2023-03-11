@@ -4,6 +4,7 @@ import tiktoken
 import openai
 import ast
 from sqlite3 import Error
+import params as prm # import parameters from params.py
 
 
 ## DB utilities ##
@@ -46,6 +47,34 @@ def parse_tables(conn):
         c = conn.cursor()
         c.execute("SELECT name FROM sqlite_master WHERE type='table';")
         return c.fetchall()
+    except Error as e:
+        print(e)
+
+
+def query_db(conn, query):
+    """Query the database
+    :param conn: Connection object
+    :param query: SQL query
+    :return:
+    """
+    try:
+        c = conn.cursor()
+        c.execute(query)
+        return c.fetchall()
+    except Error as e:
+        print(e)
+
+
+def write_db(conn, query):
+    """Write to the database
+    :param conn: Connection object
+    :param query: SQL query
+    :return:
+    """
+    try:
+        c = conn.cursor()
+        c.execute(query)
+        conn.commit()
     except Error as e:
         print(e)
 
