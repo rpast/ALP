@@ -1,4 +1,4 @@
-# TSunset
+# Horizon Atlas
 
 PoC for conversational research assistant with ADA and GPT3.5
 
