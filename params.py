@@ -15,7 +15,7 @@ IN_DOC_PTH = IN_PTH / TITLE
 # Session name is defined by the user
 
 ## Create a table in the database where session data will be stored
-DB_PTH = D_PTH / 'tsun.db'
+DB_PTH = D_PTH / 'aleph.db'
 
 INTERACTION_TABLE_SQL = """ 
     CREATE TABLE IF NOT EXISTS interaction (
