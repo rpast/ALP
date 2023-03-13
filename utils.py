@@ -103,7 +103,7 @@ def order_document_sections_by_query_similarity(query, contexts):
     
     document_similarities = sorted(
         [
-            (vector_similarity(query_embedding, ast.literal_eval(doc_embedding)), doc_index) for doc_index, doc_embedding in contexts.items()
+            (vector_similarity(query_embedding, doc_embedding), doc_index) for doc_index, doc_embedding in contexts.items()
             ], reverse=True
         )
     
@@ -247,6 +247,8 @@ def insert_interaction(conn, session_name, inter_type, message):
     encoding = tiktoken.encoding_for_model('gpt-3.5-turbo-0301')
     num_tokens_oai = len(encoding.encode(message))
 
+    message = message.replace('"', '').replace("'", "")
+
     try:
         c = conn.cursor()
         c.execute(f"INSERT INTO interaction_{session_name} VALUES ('{session_name}', '{inter_type}', '{message}', '{embedding}','{num_tokens_oai}')")
@@ -261,12 +263,14 @@ def insert_interaction(conn, session_name, inter_type, message):
 
 ## Conversation loop utilities ##
 
-def call_response(session_name):
-    """Call OpenAI API to get response
-    :param prompt: prompt text
-    :prompt: prompt text
-    :return:
+def fetch_recall_table(session_name):
+    """Query the database for the recall table for the given session_name
+    Recal table is a table that contains the context data for the given session_name and the interaction data for the given session_name
+
+    :param session_name: session name
+    :return: recal table pd.DataFrame
     """
+
     select_context = f"SELECT * FROM context_{session_name}"
     check_interaction = f"SELECT name FROM sqlite_master WHERE type='table' AND name='interaction_{session_name}'"
 
@@ -279,7 +283,7 @@ def call_response(session_name):
     # Check if interaction table for given session_name exists in the database
     inter_check = query_db(conn, check_interaction)
     if not inter_check:
-        print(f"Interaction table for session: \"{session_name}\" does not exist in the database. Is it the first call in the session?")
+        print(f"Interaction table for session: \"{session_name}\" does not exist in the database.")
     else:
         interaction_df = pd.read_sql_query(f"SELECT * FROM interaction_{session_name}", conn)
     
