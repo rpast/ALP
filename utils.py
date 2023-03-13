@@ -263,6 +263,16 @@ def insert_interaction(conn, session_name, inter_type, message):
 
 ## Conversation loop utilities ##
 
+def convert_table_to_dct(table):
+    """Converts table to dictionary of embeddings
+    As Pandas df.to_dict() makes every value a string we need to convert it to list of loats before passing it to the model
+    """
+    table_dct = table[['embedding']].to_dict()['embedding']
+    for k, v in table_dct.items():
+        table_dct[k] = ast.literal_eval(v)
+    return table_dct
+
+
 def fetch_recall_table(session_name):
     """Query the database for the recall table for the given session_name
     Recal table is a table that contains the context data for the given session_name and the interaction data for the given session_name
