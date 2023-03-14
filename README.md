@@ -9,7 +9,7 @@ PoC for conversational research assistant with ADA and GPT3.5
 3. User's query gets measured against chunks and the one with the lowest distance score gets chosen (cosine distance).
 4. Closest chunk and query get injected into the input for API call to ```gpt-3.5-turbo```. 
 
-<img src="https://github.com/rpast/tsunset/blob/master/static/tsun_poc.png?raw=true"></img>
+<img src="https://github.com/rpast/horizon/blob/context_preprocessing/static/alp_demo.gif?raw=true"></img>
 
 
 ## Todo
