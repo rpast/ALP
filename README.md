@@ -2,18 +2,25 @@
 
 PoC for conversational research assistant with ADA and GPT3.5
 
-## Sample usage:
+## Features
+1. Automated pdf content preprocessing.
+2. Accurate context building through nearest neighbors context selection with embedding vectors on passed source material.
+3. Conversation history stored in local SQLite db.
+4. System holds memory of past conversations and makes use of it in teh conversation.
 
-1. User loads the document and preprocesses it to a form of a chapter-sized chunks.
-2. Each chunk gets its embedding from ```text-embedding-ada-002```
-3. User's query gets measured against chunks and the one with the lowest distance score gets chosen (cosine distance).
-4. Closest chunk and query get injected into the input for API call to ```gpt-3.5-turbo```. 
+## Models used
 
-<img src="https://github.com/rpast/horizon/blob/context_preprocessing/static/alp_demo.gif?raw=true"></img>
+
+1. ```text-embedding-ada-002```
+2. ```gpt-3.5-turbo```. 
+
+## Sample usage
+
+<img src="https://github.com/rpast/horizon/blob/master/static/alp_demo.gif?raw=true"></img>
 
 
 ## Todo
 
-1. [ ] Implement session memory so longer conversations with arbitrary context are possible.
-2. [ ] Come up with complexity control of the API call.
-3. [ ] Refactor document pre-processing so as little input from user is necessary.
+1. [ ] Inject origin conversation context to the interaction database
+2. [ ] Hold latest exchange in the context, so the model is able to retrieve it without nearest neighbors on embedding space
+3. [ ] Count tokens in the context window and display to user

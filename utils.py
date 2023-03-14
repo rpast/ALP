@@ -280,6 +280,29 @@ def insert_interaction(conn, session_name, inter_type, message):
         return False
     
 
+def bulk_insert_interaction(conn, usr_txt, asst_txt, session_name):
+    """
+    Insert user and assistant interactions into DB
+    """
+    # Open DB so the assistant can remember the conversation
+    conn = create_connection(prm.DB_PTH)
+    # Insert user message into DB so we can use it for another user's input
+    insert_interaction(
+        conn, 
+        session_name, 
+        'user', 
+        usr_txt
+        )
+    # Insert model's response into DB so we can use it for another user's input
+    insert_interaction(
+        conn,
+        session_name,
+        'assistant',
+        asst_txt
+        )
+    conn.close()
+    
+
 
 ## Conversation loop utilities ##
 
