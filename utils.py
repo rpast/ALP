@@ -3,10 +3,12 @@ import sqlite3
 import tiktoken
 import openai
 import ast
+import re
 from sqlite3 import Error
 import pandas as pd
 import numpy as np
 import params as prm # import parameters from params.py
+from pdfminer.high_level import extract_text
 
 
 
@@ -26,6 +28,24 @@ def split_contents(x):
     #     return [contents[i:i+splitlen] for i in range(0, textlen, splitlen)]
     # else:
     #     return [contents]
+
+def grab_chapters(text, matching_logic=1):
+    """
+    Grab chapter names from the pdf text
+    """
+    if matching_logic == 1:
+        digit_word_rgx = r'^\d+(\.\d+)*\s+[A-Z].*$|Abstract'
+    elif matching_logic == 2:
+        digit_word_rgx = r'^\d+(\.\d+)*\s[a-zA-Z]+.*$|Abstract'
+
+    chapter_pattern = re.compile(digit_word_rgx)
+
+    chapters = []
+    for line in text.split('\n'):
+        if chapter_pattern.match(line):
+            chapters.append(line.strip())
+
+    return chapters
 
 
 ## OAI utilities ##

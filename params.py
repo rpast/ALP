@@ -7,8 +7,6 @@ from pathlib import Path
 ## General parameters ##
 IN_PTH = Path('./input')
 D_PTH = Path('./data')
-TITLE = 'biological-cognition.pdf'
-IN_DOC_PTH = IN_PTH / TITLE
 
 
 ## SQL parameters ##
