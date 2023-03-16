@@ -252,7 +252,7 @@ def insert_context(conn, session_name, context_df):
         return False
 
 
-def insert_interaction(conn, session_name, inter_type, message):
+def insert_interaction(conn, session_name, inter_type, message, timestamp=0):
     """Insert interaction data into the database
     :param conn: Connection object
     :param session_name: session name
@@ -271,7 +271,7 @@ def insert_interaction(conn, session_name, inter_type, message):
 
     try:
         c = conn.cursor()
-        c.execute(f"INSERT INTO interaction_{session_name} VALUES ('{session_name}', '{inter_type}', '{message}', '{embedding}','{num_tokens_oai}')")
+        c.execute(f"INSERT INTO interaction_{session_name} VALUES ('{session_name}', '{inter_type}', '{message}', '{embedding}','{num_tokens_oai}', '{timestamp}')")
         conn.commit()
         print(f"Interaction type: \"{inter_type}\" inserted into the database for session: \"{session_name}\"")
         return True
