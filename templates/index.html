@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ask GPT-3.5 Turbo</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Ask GPT-3.5 Turbo</h1>
+    <form id="ask-form">
+        <label for="session_name">Session name:</label>
+        <input type="text" name="session_name" required><br><br>
+        <label for="question">Question:</label>
+        <input type="text" name="question" required><br><br>
+        <input type="submit" value="Ask">
+    </form>
+    <div id="answers"></div>
+
+    <script>
+        $(document).ready(function() {
+            $('#ask-form').submit(function(event) {
+                event.preventDefault();
+                var formData = {
+                    'session_name': $('input[name=session_name]').val(),
+                    'question': $('input[name=question]').val()
+                };
+                
+                $.ajax({
+                    type: 'POST',
+                    url: '/ask',
+                    data: formData,
+                    dataType: 'json',
+                    encode: true
+                }).done(function(data) {
+                    $('#answers').append('<p><strong>Question:</strong> ' + formData.question + '</p>');
+                    $('#answers').append('<p><strong>Answer:</strong> ' + data.response + '</p>');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

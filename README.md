@@ -20,7 +20,6 @@ PoC for conversational research assistant with ADA and GPT3.5
 
 
 ## Todo
-
 1. [x] Inject origin conversation context to the interaction database
 2. [x] Hold latest exchange in the context, so the model is able to retrieve it without nearest neighbors on embedding space
 3. [x] Count tokens in the context window and display to user
