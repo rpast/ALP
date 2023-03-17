@@ -26,3 +26,4 @@ PoC for conversational research assistant with ADA and GPT3.5
 3. [x] Count tokens in the context window and display to user
 4. [ ] Refactor code into .py script 
 5. [ ] Wrap the code into Flask app
+6. [ ] Test on longer pdfs (books)

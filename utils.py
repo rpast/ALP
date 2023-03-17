@@ -9,6 +9,8 @@ import pandas as pd
 import numpy as np
 import params as prm # import parameters from params.py
 from pdfminer.high_level import extract_text
+from PyPDF2 import PdfReader
+from pathlib import Path
 
 
 
@@ -29,6 +31,7 @@ def split_contents(x):
     # else:
     #     return [contents]
 
+
 def grab_chapters(text, matching_logic=1):
     """
     Grab chapter names from the pdf text
@@ -47,6 +50,40 @@ def grab_chapters(text, matching_logic=1):
 
     return chapters
 
+
+def load_pdf():
+    # Get the document name from the user
+    doc_name = input('Enter document name from input: ')
+
+    # Extract the text from the PDF and split it by page
+    pdf_text = extract_text_by_page(Path(f'./input/{doc_name}'))
+
+    # Display the extracted text
+    # for page_number, content in pdf_text.items():
+    #     print(f"Page {page_number}: {content}\n")
+    return pdf_text
+#
+def extract_text_by_page(pdf_path):
+    with open(pdf_path, 'rb') as pdf_file:
+        reader = PdfReader(pdf_file)
+        num_pages = len(reader.pages)
+        pdf_text = {}
+
+        for page_number in range(num_pages):
+            page = reader.pages[page_number]
+            text = page.extract_text()
+            cleaned_text = clean_text(text)
+            pdf_text[page_number+1] = cleaned_text
+
+    return pdf_text
+#
+def clean_text(text):
+    text = text.replace('\t', ' ')
+    text = text.strip().lower()
+    text = text.replace('\n', '')
+    text = text.replace('\t', '')
+    text = re.sub(r'\s+', ' ', text)
+    return text
 
 ## OAI utilities ##
 
