@@ -1,29 +1,18 @@
+import openai
+
 import pandas as pd
-import numpy as np
-import openai, pickle, tiktoken, ast
-
-from pathlib import Path
-from tqdm import tqdm
-
-import re, sqlite3
-
-from pdfminer.high_level import extract_text
-
-from collections import defaultdict
-
-from datetime import date, datetime
-
-import pprint
-
 import utils as utl
 import params as prm
 
-import json
+from tqdm import tqdm
+from datetime import date, datetime
+
 
 # Use your own key
 # read secret key from the file 
 with open('secret.txt', 'r') as f:
     openai.api_key = f.read()
+
 
 # Grab current local date
 today = date.today()
