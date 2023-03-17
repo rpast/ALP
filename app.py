@@ -137,61 +137,59 @@ if process_doc.lower() == 'y':
     # print('Printing the last 50 characters of the last chapter ', chapters_contents[chapters[-1]][-50:])
     
 
-    chapters_contents = utl.load_pdf()
+    doc_contents = utl.load_pdf()
 
     # Grab contents into a dataframe
-    chapter_contents_df = pd.DataFrame(chapters_contents, index=['contents'])
-    chapter_contents_df = chapter_contents_df.T
+    doc_contents_df = pd.DataFrame(doc_contents).T
 
     # Create a token count column
-    chapter_contents_df['num_tokens_oai'] = chapter_contents_df['contents'].apply(
+    doc_contents_df['num_tokens_oai'] = doc_contents_df['contents'].apply(
         lambda x: utl.num_tokens_from_messages([{'message': x}])
     )
 
     # For instances with token count > token_thres, split them so they fit model threshold so we could get their embeddings
     # TODO: make it split actually by tokens, not by characters
 
-    token_thres = 500
-
     # Calculate split factor for each chapter
-    chapter_contents_df['split_factor'] = 1
-    chapter_contents_df.loc[chapter_contents_df['num_tokens_oai']>prm.TOKEN_THRES, 'split_factor'] = round(chapter_contents_df['num_tokens_oai']/token_thres,0)
+    doc_contents_df['split_factor'] = 1
+    doc_contents_df.loc[doc_contents_df['num_tokens_oai']>prm.TOKEN_THRES, 'split_factor'] = round(doc_contents_df['num_tokens_oai']/prm.TOKEN_THRES, 0)
 
     # Split contents
-    chapter_contents_df['contents_split'] = chapter_contents_df.apply(
-        lambda x: utl.split_contents(x), axis=1)
+    doc_contents_df['contents_split'] = doc_contents_df.apply(
+        lambda x: utl.split_contents(x), axis=1
+        )
 
     # Explode the split contents
-    chapter_contents_long_df = chapter_contents_df.explode(
+    pages_contents_long_df = doc_contents_df.explode(
         column='contents_split'
     )[['contents_split']]
 
     # Create a token count column (Again - this time for long table)
-    chapter_contents_long_df['num_tokens_oai'] = chapter_contents_long_df['contents_split'].apply(
+    pages_contents_long_df['num_tokens_oai'] = pages_contents_long_df['contents_split'].apply(
         lambda x: utl.num_tokens_from_messages([{'message': x}])
     )
 
-    # Form fragment text column
-    chapter_contents_long_df['text'] = "PAGE: " + chapter_contents_long_df.index.astype(str) + " CONTENT: " + chapter_contents_long_df['contents_split']
+    # Form text column for each fragment
+    pages_contents_long_df['text'] = "PAGE: " + pages_contents_long_df.index.astype(str) + " CONTENT: " + pages_contents_long_df['contents_split']
 
 
     # Further dataframe processing
-    chapter_contents_long_df = (
-        chapter_contents_long_df
+    pages_contents_long_df = (
+        pages_contents_long_df
         .drop(columns=['contents_split']) # Drop contents_split column
         .reset_index() # Reset index so chapter names are stored in columns
-        .rename(columns={'index': 'chapter'}) # Rename index column to chapter
+        .rename(columns={'index': 'page'}) # Rename index column to chapter
         .assign(session_name=session_name) # Add session_name column
         .assign(interaction_type='source') ## Add interaction type column
         )
-    ## Drop rows where num_tokens_oai is less than 100
-    chapter_contents_long_df = chapter_contents_long_df[chapter_contents_long_df['num_tokens_oai'] > 50].copy()
+    ## Drop rows where num_tokens_oai is less than 25
+    pages_contents_long_df = pages_contents_long_df[pages_contents_long_df['num_tokens_oai'] > 25].copy()
 
 
     ## GET EMBEDDINGS #############################################################
-    contents_for_embed_df = chapter_contents_long_df[['text']]
+    contents_for_embed_df = pages_contents_long_df[['text']]
     # Calculate the cost of running the model to get embeddings
-    embed_cost = (chapter_contents_long_df['num_tokens_oai'].sum() / 1000) * 0.0004
+    embed_cost = (pages_contents_long_df['num_tokens_oai'].sum() / 1000) * 0.0004
     input(f"Embedding cost is {embed_cost}$. Press enter to continue")
 
 
@@ -201,7 +199,7 @@ if process_doc.lower() == 'y':
     contents_embedded = {}
 
     for i in rng:
-        txt_chapter = contents_for_embed_df.index[i]
+        txt_page = contents_for_embed_df.index[i]
         txt_list = contents_for_embed_df.iloc[i].to_list()
 
         txt_embed = utl.get_embedding(txt_list)
@@ -209,39 +207,45 @@ if process_doc.lower() == 'y':
 
 
         # Join embeddings with context table
-        contents_embedded[txt_chapter] = txt_embed
+        contents_embedded[txt_page] = txt_embed
     embeded_s = pd.Series(contents_embedded, index=contents_embedded.keys())
 
     # Merge embeddings with chapter contents
-    chapter_contents_long_df['embedding'] = embeded_s
-    chapter_contents_long_df.head()
+    pages_contents_long_df['embedding'] = embeded_s
+    pages_contents_long_df.head()
 
     # Save embeddings
-    chapter_contents_long_df.to_csv(f'./data/{session_name}_embeded.csv')
+    pages_contents_long_df.to_csv(
+        f'./data/{session_name}_embeded.csv',
+        index=False
+        )
     ###########################################################################
 
 else:
-    chapter_contents_long_df = pd.read_csv(prm.D_PTH  / f'{session_name}_embeded.csv', index_col=0)
+    pages_contents_long_df = pd.read_csv(prm.D_PTH  / f'{session_name}_embeded.csv')
 
 # DB error fix:
-chapter_contents_long_df['embedding'] = chapter_contents_long_df['embedding'].apply(json.dumps)
+# chapter_contents_long_df['embedding'] = chapter_contents_long_df['embedding'].apply(json.dumps)
+pages_contents_long_df['embedding'] = pages_contents_long_df['embedding'].astype(str)
 
 # DB INTERACTION
 # Insert context into DB
 conn = utl.create_connection(prm.DB_PTH)
-utl.insert_context(conn, session_name, chapter_contents_long_df)
+utl.insert_context(conn, session_name, pages_contents_long_df)
 conn.close()
-
 
 # Buiild seed conversation context for summarization
 # TODO: no need to get embedding each time the script is run. Optimize it.
 # TODO: put this to params.py
 
-summary_ctx_usr = "How would you act when I'd ask you what this document is about. Can you summarize it for me?"
 
-summary_ctxt_asst = "When a user asks me to summarize the source material or explain what it is about, I would look for the best text fragment that provides general information about the document's contents. To find a text fragment for summarization, I suggest starting by scanning the abstract and conclusion sections, and also checking the table of contents."
 
-utl.bulk_insert_interaction(conn, summary_ctx_usr, summary_ctxt_asst, session_name)
+utl.bulk_insert_interaction(
+    conn, 
+    prm.SUMMARY_CTXT_USR, 
+    prm.SUMMARY_TXT_ASST, 
+    session_name
+    )
 
 
 while True:
@@ -250,9 +254,13 @@ while True:
     ## Get unix time
     query_time = int(datetime.now().timestamp())
     ## User input
+    print('User input')
     question = input(">>> ")
     # question = prmt
 
+    if question == 'exit':
+        break
+    
 
     ## Fetch recal table so we can compare user input to embeddings saved in it and fetch the right context.
     recal_table = utl.fetch_recall_table(session_name)
@@ -313,12 +321,12 @@ while True:
 
     ## Grab chapter name if it exists, otherwise use session name
     ## It will become handy when user wants to know from which chapter the context was taken
-    if len(recal_source_id)>1:
-        recal_source_chapter = recal_table.loc[idxs]['chapter'].to_list()
+    if len(idxs)>1:
+        recal_source_pages = recal_table.loc[idxs]['page'].to_list()
     else:
-        recal_source_chapter = recal_table.loc[recal_source_id[1]]['chapter']
+        recal_source_pages = recal_table.loc[recal_source_id[1]]['page']
 
-    print(f'I will answer your question basing on the following context: {set(recal_source_chapter)}')
+    print(f'I will answer your question basing on the following context: {set(recal_source_pages)}')
 
     ###############################################################################
     # Set-up system prompts. This is done once for the whole session and the setup depends on the type of assistant chosen by the user.
