@@ -24,6 +24,6 @@ PoC for conversational research assistant with ADA and GPT3.5
 1. [x] Inject origin conversation context to the interaction database
 2. [x] Hold latest exchange in the context, so the model is able to retrieve it without nearest neighbors on embedding space
 3. [x] Count tokens in the context window and display to user
-4. [ ] Refactor code into .py script 
+4. [x] Refactor code into .py script 
 5. [ ] Wrap the code into Flask app
 6. [ ] Test on longer pdfs (books)
