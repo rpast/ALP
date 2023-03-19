@@ -1,41 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Ask GPT-3.5 Turbo</title>
+    <title>ALP</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href='../static/styles/style.css'>
 </head>
 <body>
-    <h1>Ask GPT-3.5 Turbo</h1>
-    <form id="ask-form">
-        <label for="session_name">Session name:</label>
-        <input type="text" name="session_name" required><br><br>
-        <label for="question">Question:</label>
-        <input type="text" name="question" required><br><br>
-        <input type="submit" value="Ask">
-    </form>
-    <div id="answers"></div>
+    <div class="container">
+        <div class="content">
+            <h1>Talk to ALP</h1>
+            <form id="ask-form">
+                <label for="session_name">Session name:</label>
+                <input type="text" name="session_name" required><br><br>
+                <label for="question">Question:</label>
+                <textarea name="question" required></textarea><br><br>
+                <input type="submit" value="Ask">
+            </form>
+        </div>
+        <div class="response-container">
+            <div id="response"></div>
+            <img src="/static/processing.gif" id="processing" style="display: none; width:128px;">
+        </div>
+    </div>
 
-    <script>
-        $(document).ready(function() {
-            $('#ask-form').submit(function(event) {
-                event.preventDefault();
-                var formData = {
-                    'session_name': $('input[name=session_name]').val(),
-                    'question': $('input[name=question]').val()
-                };
-                
-                $.ajax({
-                    type: 'POST',
-                    url: '/ask',
-                    data: formData,
-                    dataType: 'json',
-                    encode: true
-                }).done(function(data) {
-                    $('#answers').append('<p><strong>Question:</strong> ' + formData.question + '</p>');
-                    $('#answers').append('<p><strong>Answer:</strong> ' + data.response + '</p>');
-                });
-            });
-        });
-    </script>
+    <script src="../static/scripts/chat.js"></script>
+    
 </body>
 </html>

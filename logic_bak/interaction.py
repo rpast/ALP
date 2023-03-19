@@ -1,4 +1,4 @@
-import openai
+import openai, os
 
 import pandas as pd
 import utils as utl
@@ -8,11 +8,8 @@ from tqdm import tqdm
 from datetime import date, datetime
 
 
-
-# Use your own key
-# read secret key from the file 
-with open('secret.txt', 'r') as f:
-    openai.api_key = f.read()
+api_key = os.environ['OAI_KEY']
+openai.api_key = api_key
 
 
 # Grab current local date

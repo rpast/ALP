@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Start</title>
+    <link rel="stylesheet" href='/static/styles/style.css'>
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h1>Start a Session</h1>
+            <form id="session-start-form">
+                <label for="session_name">Session name:</label>
+                <input type="text" name="session_name" required><br><br>
+                <label for="pdf">Upload PDF:</label>
+                <input type="file" name="pdf" accept=".pdf" required><br><br>
+                <input type="submit" value="Start">
+            </form>
+        </div>
+    </div>
+    
+    <script src="/static/scripts/session_start.js"></script>
+</body>
+</html>
+

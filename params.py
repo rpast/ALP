@@ -5,10 +5,6 @@ import openai
 from pathlib import Path
 
 
-## Load secret 
-with open('secret.txt', 'r') as f:
-    OAI_KEY = f.read()
-
 ## General parameters ##
 IN_PTH = Path('./input')
 D_PTH = Path('./data')
