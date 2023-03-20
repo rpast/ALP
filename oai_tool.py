@@ -1,4 +1,4 @@
-import tiktoken
+import tiktoken, openai
 
 # Count tokens for each chapter
 def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
@@ -22,3 +22,13 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
     else:
         raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}.
 See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
+
+
+# Build simple embedding function
+def get_embedding(text, model="text-embedding-ada-002"):
+    """Returns the embedding for a given text.
+    """
+    return openai.Embedding.create(
+        input=text, 
+        model=model,
+        )['data'][0]['embedding']

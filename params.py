@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 ## General parameters ##
+UPLOAD_FOLDER = Path('./uploads')
 IN_PTH = Path('./input')
 D_PTH = Path('./data')
 

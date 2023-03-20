@@ -25,4 +25,11 @@ PoC for conversational research assistant with ADA and GPT3.5
 3. [x] Count tokens in the context window and display to user
 4. [x] Refactor code into .py script 
 5. [ ] Wrap the code into Flask app
+   1. [x] PDF upload and preprocessing.
+   2. [ ] Count embedding costs and embedding step before moving to chat
+   3. [ ] Add context handler in the chat
+   4. [ ] Test for session exclusive database
+   5. [ ] Implement safe way of handling user's api keys
+   6. [ ] Allow for context table extract (to JSON)
 6. [ ] Test on longer pdfs (books)
+7. [ ] Implement whisper audio-to-text module

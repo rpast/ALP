@@ -9,12 +9,18 @@
     <div class="container">
         <div class="content">
             <h1>Hi! this is ALP, provide Open AI API key</h1>
-            <form action="/set_api_key" method="post">
-                <label for="api_key">Key:</label>
+            <form action="/set_session_details" method="post" enctype="multipart/form-data">
+                <label for="session_name">Session Name:</label>
+                <input type="text" id="session_name" name="session_name">
+                <label for="api_key">API Key:</label>
                 <input type="text" id="api_key" name="api_key">
-                <button type="submit">Submit</button>
+                <label for="pdf">Upload PDF:</label>
+                <input type="file" name="pdf" accept=".pdf" required><br><br>
+                <button type="submit">Start</button>
             </form>
         </div>
     </div>
+
+    <!-- <script src="/static/scripts/session_start.js"></script> -->
 </body>
 </html>

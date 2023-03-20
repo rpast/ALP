@@ -2,7 +2,7 @@
 import openai
 
 import pandas as pd
-import utils as utl
+import logic_bak.utils as utl
 import params as prm
 
 from tqdm import tqdm
