@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Summary</title>
+    <link rel="stylesheet" href='../static/styles/style.css'>
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h1>Summary</h1>
+            <p>Session Name: {{ session_name }}</p>
+            <p>Embedding cost: {{ embedding_cost }}</p>
+            <form action="/start_embedding" method="post">
+                <input type="hidden" name="pages_refined_df_json" value="{{ pages_refined_df_json }}">
+                <button type="submit">Proceed</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
+
+

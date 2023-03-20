@@ -1,14 +1,11 @@
 """This file contains all the parameters for the project
 """
 
-import openai
 from pathlib import Path
 
 
 ## General parameters ##
 UPLOAD_FOLDER = Path('./uploads')
-IN_PTH = Path('./input')
-D_PTH = Path('./data')
 
 TOKEN_THRES = 500 # Number of tokens to split the document into chunks
 NUM_SAMPLES = 5 # Number of samples to take from the document
@@ -21,9 +18,6 @@ SUMMARY_TXT_ASST = "When a user asks me to summarize the source material or expl
 
 ## SQL parameters ##
 # Session name is defined by the user
-
-## Create a table in the database where session data will be stored
-DB_PTH = D_PTH / 'aleph.db'
 
 # INTERACTION_TABLE_SQL = """ 
 #     CREATE TABLE IF NOT EXISTS interaction (
@@ -39,7 +33,6 @@ DB_PTH = D_PTH / 'aleph.db'
 #     ) 
 #     """
 
-
 CONTEXT_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS context (
         session_name,
@@ -48,7 +41,6 @@ CONTEXT_TABLE_SQL = """
         chapter_token_no,
         chapter_embeddings        
         )"""
-
 
 SESSION_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS session (

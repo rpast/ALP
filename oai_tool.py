@@ -20,8 +20,10 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
         num_tokens += 2  # every reply is primed with <im_start>assistant
         return num_tokens
     else:
-        raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}.
-See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
+        raise NotImplementedError(f"""
+        num_tokens_from_messages() is not presently implemented for model {model}.
+        See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.
+        """)
 
 
 # Build simple embedding function

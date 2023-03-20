@@ -16,8 +16,14 @@
                 <input type="text" id="api_key" name="api_key">
                 <label for="pdf">Upload PDF:</label>
                 <input type="file" name="pdf" accept=".pdf" required><br><br>
-                <button type="submit">Start</button>
+                <button type="submit">Upload</button>
             </form>
+            {% if embedding_cost %}
+            <p>Embedding cost: {{ embedding_cost }}</p>
+            <form action="/index" method="post" enctype="multipart/form-data">
+                <button type="submit">Proceed</button>
+            </form>
+            {% endif %}
         </div>
     </div>
 

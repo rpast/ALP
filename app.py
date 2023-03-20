@@ -1,17 +1,19 @@
-import os, openai, time, datetime
+import os, openai, time, datetime, json
+import pandas as pd
 
+from flask import Flask, request, session, render_template, redirect, url_for, jsonify
 
-from flask import Flask, request, render_template, redirect, url_for, jsonify
 from langchain.document_loaders import PyPDFLoader
 
 from chatbot import Chatbot
 import params as prm
-import doc_proc as dproc
+import cont_proc as cproc
 import db_handler as dbh
 
 
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 app.config['UPLOAD_FOLDER'] = prm.UPLOAD_FOLDER
 
 now = time.time()
@@ -35,11 +37,11 @@ def set_session_details():
 
     # get the data from the form
     api_key = request.form['api_key']
-    session = request.form['session_name']
+    session_name = request.form['session_name']
     file = request.files['pdf']
 
     # Create the db and file codes + save the file
-    app.config['DB_CODE'] = session + '_' + app.config['TIME']
+    app.config['DB_CODE'] = session_name + '_' + app.config['TIME']
 
     file_name = app.config['DB_CODE'] + '_' + file.filename.lower().strip().replace(' ', '_')
     fpath = os.path.join(app.config['UPLOAD_FOLDER'], file_name)
@@ -50,23 +52,44 @@ def set_session_details():
     pages = loader.load_and_split()
 
     # Process the pages and save to dbx
-    pages_df = dproc.pages_to_dataframe(pages)
-    pages_refined_df = dproc.split_pages(pages_df, app.config['DB_CODE'])
+    pages_df = cproc.pages_to_dataframe(pages)
+    pages_refined_df = cproc.split_pages(pages_df, app.config['DB_CODE'])
+    pages_refined_df_json  = pages_refined_df.to_json()
     
-    # Create session and context table
+    # Create session table
     conn = dbh.create_connection(f"{app.config['DB_CODE']}.db")
     dbh.create_table(conn, prm.SESSION_TABLE_SQL)
     dbh.insert_session(conn, app.config['DB_CODE'], app.config['DATE'])
-    dbh.insert_context(conn, app.config['DB_CODE'], pages_refined_df)
     conn.close()
 
-    app.secret_key = api_key
-    openai.api_key = app.secret_key
+    openai.api_key = api_key
+
+    embedding_cost = cproc.embed_cost(pages_refined_df)
+
+    return render_template('summary.html', session_name=session_name, embedding_cost=embedding_cost, pages_refined_df_json=pages_refined_df_json)
+
+
+@app.route('/start_embedding', methods=['POST'])
+def start_embedding():
+    # Perform the embedding process here
+    pages_refined_df_json = request.form['pages_refined_df_json']
+    pages_refined_df = pd.read_json(pages_refined_df_json)
+
+    # Perform the embedding process here
+    pages_embed_df = cproc.embed_pages(pages_refined_df)
+    pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
+
+    # Create context table
+    conn = dbh.create_connection(f"{app.config['DB_CODE']}.db")
+    dbh.insert_context(conn, app.config['DB_CODE'], pages_embed_df)
+    conn.close()
 
     return redirect(url_for('index'))
 
-##################
 
+
+
+###############################################################################
 
 @app.route('/interaction')
 def index():
@@ -87,5 +110,3 @@ def ask():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5003)
-
-

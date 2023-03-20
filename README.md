@@ -26,7 +26,8 @@ PoC for conversational research assistant with ADA and GPT3.5
 4. [x] Refactor code into .py script 
 5. [ ] Wrap the code into Flask app
    1. [x] PDF upload and preprocessing.
-   2. [ ] Count embedding costs and embedding step before moving to chat
+   2. [x] Count embedding costs and embedding step before moving to chat
+      1. [ ] use database to pass data between functions
    3. [ ] Add context handler in the chat
    4. [ ] Test for session exclusive database
    5. [ ] Implement safe way of handling user's api keys
