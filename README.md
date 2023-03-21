@@ -27,10 +27,12 @@ PoC for conversational research assistant with ADA and GPT3.5
 5. [ ] Wrap the code into Flask app
    1. [x] PDF upload and preprocessing.
    2. [x] Count embedding costs and embedding step before moving to chat
-      1. [ ] use database to pass data between functions
+      1. [x] use database to pass data between functions
    3. [ ] Add context handler in the chat
    4. [ ] Test for session exclusive database
    5. [ ] Implement safe way of handling user's api keys
    6. [ ] Allow for context table extract (to JSON)
-6. [ ] Test on longer pdfs (books)
+6. [x] Test on longer pdfs (books)
+   1. [ ] Refactor embedding function so it sends no more than {{limit}} api calls per minute
+   2. [ ] Add a way to chop the source material into arbitrary number of chunks
 7. [ ] Implement whisper audio-to-text module

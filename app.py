@@ -41,9 +41,9 @@ def set_session_details():
     file = request.files['pdf']
 
     # Create the db and file codes + save the file
-    app.config['DB_CODE'] = session_name + '_' + app.config['TIME']
+    session['DB_CODE'] = session_name + '_' + app.config['TIME']
 
-    file_name = app.config['DB_CODE'] + '_' + file.filename.lower().strip().replace(' ', '_')
+    file_name = session['DB_CODE'] + '_' + file.filename.lower().strip().replace(' ', '_')
     fpath = os.path.join(app.config['UPLOAD_FOLDER'], file_name)
     file.save(fpath)
 
@@ -53,35 +53,38 @@ def set_session_details():
 
     # Process the pages and save to dbx
     pages_df = cproc.pages_to_dataframe(pages)
-    pages_refined_df = cproc.split_pages(pages_df, app.config['DB_CODE'])
-    pages_refined_df_json  = pages_refined_df.to_json()
+    pages_refined_df = cproc.split_pages(pages_df, session['DB_CODE'])
     
     # Create session table
-    conn = dbh.create_connection(f"{app.config['DB_CODE']}.db")
+    conn = dbh.create_connection(f"{session['DB_CODE']}.db")
     dbh.create_table(conn, prm.SESSION_TABLE_SQL)
-    dbh.insert_session(conn, app.config['DB_CODE'], app.config['DATE'])
+    dbh.insert_session(conn, session['DB_CODE'], app.config['DATE'])
+    dbh.insert_context(conn, session['DB_CODE'], pages_refined_df)
     conn.close()
 
     openai.api_key = api_key
 
     embedding_cost = cproc.embed_cost(pages_refined_df)
 
-    return render_template('summary.html', session_name=session_name, embedding_cost=embedding_cost, pages_refined_df_json=pages_refined_df_json)
+    return render_template(
+        'summary.html', 
+        session_name=session_name, 
+        embedding_cost=embedding_cost
+        )
 
 
 @app.route('/start_embedding', methods=['POST'])
 def start_embedding():
-    # Perform the embedding process here
-    pages_refined_df_json = request.form['pages_refined_df_json']
-    pages_refined_df = pd.read_json(pages_refined_df_json)
+    # Load context data from db
+    conn = dbh.create_connection(f"{session['DB_CODE']}.db")
+    pages_refined_df = pd.read_sql_query(f"SELECT * FROM context_{session['DB_CODE']}", conn)
 
     # Perform the embedding process here
     pages_embed_df = cproc.embed_pages(pages_refined_df)
     pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
 
     # Create context table
-    conn = dbh.create_connection(f"{app.config['DB_CODE']}.db")
-    dbh.insert_context(conn, app.config['DB_CODE'], pages_embed_df)
+    dbh.insert_context(conn, session['DB_CODE'], pages_embed_df)
     conn.close()
 
     return redirect(url_for('index'))

@@ -12,7 +12,6 @@
             <p>Session Name: {{ session_name }}</p>
             <p>Embedding cost: {{ embedding_cost }}</p>
             <form action="/start_embedding" method="post">
-                <input type="hidden" name="pages_refined_df_json" value="{{ pages_refined_df_json }}">
                 <button type="submit">Proceed</button>
             </form>
         </div>
