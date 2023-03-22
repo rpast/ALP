@@ -17,7 +17,7 @@ Conversational research assistant with ADA and GPT3.5
 
 ## Sample usage
 
-<img src="https://github.com/rpast/horizon/blob/master/static/alp_demo.gif?raw=true"></img>
+<img src="https://github.com/rpast/ALP/blob/master/static/alp_demo_webapp.gif?raw=true"></img>
 
 
 ## Todo
