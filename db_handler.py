@@ -3,6 +3,7 @@
 
 import sqlite3
 import tiktoken
+import pandas as pd
 import params as prm
 from oai_tool import get_embedding
 
@@ -159,8 +160,7 @@ def bulk_insert_interaction(conn, usr_txt, asst_txt, session_name):
     """
     Insert user and assistant interactions into DB
     """
-    # Open DB so the assistant can remember the conversation
-    conn = create_connection(prm.DB_PTH)
+
     # Insert user message into DB so we can use it for another user's input
     insert_interaction(
         conn, 
@@ -175,5 +175,33 @@ def bulk_insert_interaction(conn, usr_txt, asst_txt, session_name):
         'assistant',
         asst_txt
         )
-    conn.close()
+
+
+def fetch_recall_table(session_name, conn):
+    """Query the database for the recall table for the given session_name
+    Recal table is a table that contains the context data for the given session_name and the interaction data for the given session_name
+
+    :param session_name: session name
+    :return: recal table pd.DataFrame
+    """
+
+    select_context = f"SELECT * FROM context_{session_name}"
+    check_interaction = f"SELECT name FROM sqlite_master WHERE type='table' AND name='interaction_{session_name}'"
+
+
+    # Fetch context table for given session_name
+    context_df = pd.read_sql_query(select_context, conn)
+    interaction_df = pd.DataFrame(columns=['session_name', 'interaction_type', 'messages', 'embeddings'])
+
+    # Check if interaction table for given session_name exists in the database
+    inter_check = query_db(conn, check_interaction)
+    if not inter_check:
+        print(f"Interaction table for session: \"{session_name}\" does not exist in the database.")
+    else:
+        interaction_df = pd.read_sql_query(f"SELECT * FROM interaction_{session_name}", conn)
+    
+    # Create one master dataframe with context and interaction data
+    master_df = pd.concat([context_df, interaction_df], ignore_index=True)
+
+    return master_df
     

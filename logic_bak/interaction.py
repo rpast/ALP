@@ -93,7 +93,7 @@ while True:
     recal_embed_user = utl.convert_table_to_dct(recal_table_user)
     recal_embed_assistant = utl.convert_table_to_dct(recal_table_assistant)
 
-    ## Get the context from recal table that is the most similar to user input
+    ## Get the context from recall table that is the most similar to user input
     if recal_table_source.shape[0]<prm.NUM_SAMPLES:
         num_samples = recal_table_source.shape[0]
         print('Source material is shorter than number of samples you want to get. Setting number of samples to the number of source material sections.')

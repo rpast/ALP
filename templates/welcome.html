@@ -3,12 +3,12 @@
 <head>
     <meta charset="utf-8">
     <title>ALP</title>
-    <link rel="stylesheet" href='../static/styles/style.css'>
+    <link rel="stylesheet" href='../static/styles/welcome-style.css'>
 </head>
 <body>
     <div class="container">
         <div class="content">
-            <h1>Hi! this is ALP, provide Open AI API key</h1>
+            <h2>Hi! Provide session details</h2>
             <form action="/set_session_details" method="post" enctype="multipart/form-data">
                 <label for="session_name">Session Name:</label>
                 <input type="text" id="session_name" name="session_name">
@@ -18,15 +18,10 @@
                 <input type="file" name="pdf" accept=".pdf" required><br><br>
                 <button type="submit">Upload</button>
             </form>
-            {% if embedding_cost %}
-            <p>Embedding cost: {{ embedding_cost }}</p>
-            <form action="/index" method="post" enctype="multipart/form-data">
-                <button type="submit">Proceed</button>
-            </form>
-            {% endif %}
         </div>
     </div>
 
     <!-- <script src="/static/scripts/session_start.js"></script> -->
 </body>
 </html>
+

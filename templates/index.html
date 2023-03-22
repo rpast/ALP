@@ -6,22 +6,21 @@
     <link rel="stylesheet" href='../static/styles/style.css'>
 </head>
 <body>
-    <div class="container">
-        <div class="content">
-            <h1>Talk to ALP</h1>
+    <div class="main-container">
+        <div class="container">
+            <div class="response-container">
+                <div id="response"></div>
+                <img src="/static/processing.gif" id="processing" style="display: none; width:128px;">
+            </div>
+        </div>
+        <div class="input-container">
             <form id="ask-form">
-                <label for="question">User Input:</label>
+                <!-- <label for="question">User Input:</label> -->
                 <textarea name="question" required></textarea><br><br>
                 <input type="submit" value="Ask">
             </form>
         </div>
-        <div class="response-container">
-            <div id="response"></div>
-            <img src="/static/processing.gif" id="processing" style="display: none; width:128px;">
-        </div>
     </div>
-
     <script src="../static/scripts/chat.js"></script>
-    
 </body>
 </html>

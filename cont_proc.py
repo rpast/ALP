@@ -1,4 +1,4 @@
-import re
+import re, ast
 from PyPDF2 import PdfReader
 import pandas as pd
 
@@ -108,3 +108,15 @@ def embed_pages(pages_contents_long_df):
     )
 
     return pages_contents_long_df
+
+
+def convert_table_to_dct(table):
+    """Converts table to dictionary of embeddings
+    As Pandas df.to_dict() makes every value a string we need to convert it to list of loats before passing it to the model
+    """
+    table_dct = table[['embedding']].to_dict()['embedding']
+    for k, v in table_dct.items():
+        table_dct[k] = ast.literal_eval(v)
+    return table_dct
+
+

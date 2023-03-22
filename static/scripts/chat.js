@@ -23,7 +23,8 @@ $(document).ready(function () {
                 $("#processing").hide();
 
                  // Append the agent's response to the response div
-                $("#response").append('<p><strong>Agent:</strong> ' + result.response + '</p>');
+                $("#response").append('<p><strong>Agent:</strong> ' + result.response.choices[0].message.content + '</p>');
+
             },
             error: function (xhr, status, error) {
                 // Hide the processing GIF in case of an error
