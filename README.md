@@ -15,10 +15,8 @@ Conversational research assistant with ADA and GPT3.5
 1. ```text-embedding-ada-002```
 2. ```gpt-3.5-turbo```. 
 
-## Sample usage
-
+## Demo
 <img src="https://github.com/rpast/ALP/blob/master/static/alp_demo_webapp.gif?raw=true"></img>
-
 
 ## Todo
 1. [x] Inject origin conversation context to the interaction database
