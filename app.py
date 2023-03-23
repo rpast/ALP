@@ -22,9 +22,7 @@ date = datetime.datetime.fromtimestamp(now)
 app.config['TIME'] = str(int(now))
 app.config['DATE'] = date
 
-# initialize classes
-chatbot = Chatbot()
-print("!Chatbot initialized")
+
 
 
 
@@ -185,41 +183,32 @@ def ask():
 
     print(f'I will answer your question basing on the following context: {set(recal_source_pages)}')
 
-    sys_message = {
-            'role': 'system', 
-            'content': "You are a helpful assistant. You provide only factual information. If you do not know the answer, you say it. I provide my input after INP tag. I will pass the context you will use in your answer. I encode it with following tags: SRC - sources we are talking about; QRY - one of previous inputs I passed to you in the conversation; RPL - one of your previous replies to my questions from the conversation."
-            }
-    prev_user = {"role": "user", "content": f"{latest_user}"}
-    prev_assistant = {"role": "assistant", "content": f"{latest_assistant}"}
-    user_message = {
-            "role": "user", 
-            "content": f"SRC: {recal_source}. QRY: {recal_user}. RPL: {recal_assistant}. INP: {question}"
-            }
-    
-    ## Form user message based on recaled context and user's input
-    usr_message = [
-        sys_message,
-        prev_user,
-        prev_assistant,
-        user_message
-        ]
+    # initialize classes
+    chatbot = Chatbot()
+    print("!Chatbot initialized")
 
+    message = chatbot.build_prompt(
+        latest_user,
+        latest_assistant,
+        recal_source,
+        recal_user,
+        recal_assistant,
+        question
+        )
+    print("!Prompt built")
+
+    # Grab call user content from messages alias
+    usr_message_content = message[0]['content']
     # Count number of tokens in user message and display it to the user
-    token_passed = oai.num_tokens_from_messages(usr_message)
+    token_passed = oai.num_tokens_from_messages(message)
     context_capacity =  4096 - token_passed
     print(f"Number of tokens passed to the model: {token_passed}")
     print(f"Number of tokens left in the context: {context_capacity}")
 
-    # Grab call user content from messages alias
-    usr_message_content = usr_message[0]['content']
 
-
-    ## Make API call with formed user message
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=usr_message
-    )
-    # response = chatbot.chat_completion_response(question)
+    # generate response
+    response = chatbot.chat_completion_response(message)
+    print("!Response generated")
 
 
     # Open DB so the assistant can remember the conversation
@@ -248,4 +237,4 @@ def ask():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5003)
+    app.run(debug=True, host='0.0.0.0', port=5000)
