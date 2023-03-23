@@ -74,16 +74,23 @@ def set_session_details():
     embedding_cost = round(cproc.embed_cost(pages_refined_df),4)
     # express embedding cost in dollars
     embedding_cost = f"${embedding_cost}"
+    doc_length = pages_refined_df.shape[0]
+    length_warning = doc_length / 60 > 1
+
 
     return render_template(
         'summary.html', 
         session_name=session_name, 
-        embedding_cost=embedding_cost
+        embedding_cost=embedding_cost,
+        doc_length=doc_length,
+        length_warning=length_warning
         )
 
 
 @app.route('/start_embedding', methods=['POST'])
 def start_embedding():
+    """Start the embedding process
+    """
     # Load context data from db
     conn = dbh.create_connection(session['DB_PTH'])
     pages_refined_df = pd.read_sql_query(f"SELECT * FROM context_{session['DB_CODE']}", conn)
@@ -94,6 +101,7 @@ def start_embedding():
 
     # Create context table
     dbh.insert_context(conn, session['DB_CODE'], pages_embed_df)
+
     conn.close()
 
     return redirect(url_for('index'))
@@ -106,6 +114,7 @@ def index():
     # Create interaction table
     conn = dbh.create_connection(session['DB_PTH'])
     dbh.create_table(conn, f"CREATE TABLE IF NOT EXISTS interaction_{session['DB_CODE']} (session_name, interaction_type, text, embedding, num_tokens_oai, time_signature)")
+
     # Seed the interaction table with the context
     dbh.bulk_insert_interaction(
     conn, 

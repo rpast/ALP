@@ -34,7 +34,7 @@ Conversational research assistant with ADA and GPT3.5
    7. [x] Implement safe way of handling user's api keys
    8. [ ] Allow for context table extract (to JSON)
 6. [x] Test on longer pdfs (books)
-   1. [ ] Refactor embedding function so it sends no more than {{limit}} api calls per minute
-   2. [ ] Add a way to chop the source material into arbitrary number of chunks
-   3. [ ] Implement huggingface embedding model
+   1. [x] Refactor embedding function so it sends no more than {{limit}} api calls per minute
+   2. [ ] Implement alternative embedding models
 7. [ ] Implement whisper audio-to-text module
+8. [ ] Implement models for ai content detection
