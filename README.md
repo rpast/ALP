@@ -32,7 +32,7 @@ Conversational research assistant with ADA and GPT3.5
    5. [x] Set a dedicated dir to store .db
    6. [ ] Test for session exclusive database
    7. [x] Implement safe way of handling user's api keys
-   8. [ ] Allow for context table extract (to JSON)
+   8. [x] Allow for context table extract (to JSON)
 6. [x] Test on longer pdfs (books)
    1. [x] Refactor embedding function so it sends no more than {{limit}} api calls per minute
    2. [ ] Implement alternative embedding models
