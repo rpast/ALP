@@ -46,31 +46,34 @@ def set_session_details():
     session_name = cproc.process_name(session_name)
     file_name = cproc.process_name(file.filename)
 
-    # Create the db and file codes + save the file
+    # Pre-process uploaded source file, create the session db and save
     session['DB_CODE'] = session_name + '_' + app.config['TIME']
+    # Session DB path = DB_FOLDER + session_name + time
+    session['DB_PTH'] = os.path.join(prm.DB_FOLDER, f"{session['DB_CODE']}.db")
+    # create db path with os.join
 
+    # Save the file to the upload folder
     saved_fname = session['DB_CODE'] + '_' + file_name
     fpath = os.path.join(app.config['UPLOAD_FOLDER'], saved_fname)
     file.save(fpath)
 
-    # Load the pdf and split it into pages
+    # Load the pdf process the text
     loader = PyPDFLoader(fpath)
     pages = loader.load_and_split()
-
-    # Process the pages and save to dbx
     pages_df = cproc.pages_to_dataframe(pages)
     pages_refined_df = cproc.split_pages(pages_df, session['DB_CODE'])
     
     # Create session table
-    conn = dbh.create_connection(f"{session['DB_CODE']}.db")
+    conn = dbh.create_connection(session['DB_PTH'])
     dbh.create_table(conn, prm.SESSION_TABLE_SQL)
     dbh.insert_session(conn, session['DB_CODE'], app.config['DATE'])
     dbh.insert_context(conn, session['DB_CODE'], pages_refined_df)
     conn.close()
 
-    
-
-    embedding_cost = cproc.embed_cost(pages_refined_df)
+    # Get the embedding cost
+    embedding_cost = round(cproc.embed_cost(pages_refined_df),4)
+    # express embedding cost in dollars
+    embedding_cost = f"${embedding_cost}"
 
     return render_template(
         'summary.html', 
@@ -82,7 +85,7 @@ def set_session_details():
 @app.route('/start_embedding', methods=['POST'])
 def start_embedding():
     # Load context data from db
-    conn = dbh.create_connection(f"{session['DB_CODE']}.db")
+    conn = dbh.create_connection(session['DB_PTH'])
     pages_refined_df = pd.read_sql_query(f"SELECT * FROM context_{session['DB_CODE']}", conn)
 
     # Perform the embedding process here
@@ -101,7 +104,7 @@ def index():
     """render interaction main page"""
 
     # Create interaction table
-    conn = dbh.create_connection(f"{session['DB_CODE']}.db")
+    conn = dbh.create_connection(session['DB_PTH'])
     dbh.create_table(conn, f"CREATE TABLE IF NOT EXISTS interaction_{session['DB_CODE']} (session_name, interaction_type, text, embedding, num_tokens_oai, time_signature)")
     # Seed the interaction table with the context
     dbh.bulk_insert_interaction(
@@ -123,7 +126,7 @@ def ask():
 
 
     # Handle chat memory and context
-    conn = dbh.create_connection(f"{session['DB_CODE']}.db")
+    conn = dbh.create_connection(session['DB_PTH'])
     recal_table = dbh.fetch_recall_table(session['DB_CODE'], conn)
     conn.close() 
     ## Chop recall table to only include contexts for sources, user, or assistant
@@ -218,7 +221,7 @@ def ask():
 
 
     # Open DB so the assistant can remember the conversation
-    conn = dbh.create_connection(f"{session['DB_CODE']}.db")
+    conn = dbh.create_connection(session['DB_PTH'])
     # Insert user message into DB so we can use it for another user's input
     dbh.insert_interaction(
         conn, 

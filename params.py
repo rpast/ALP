@@ -5,7 +5,8 @@ from pathlib import Path
 
 
 ## General parameters ##
-UPLOAD_FOLDER = Path('./uploads')
+DB_FOLDER = Path('./data/dbs')
+UPLOAD_FOLDER = Path('./data/uploads')
 
 TOKEN_THRES = 500 # Number of tokens to split the document into chunks
 NUM_SAMPLES = 5 # Number of samples to take from the document
