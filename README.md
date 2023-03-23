@@ -28,10 +28,10 @@ Conversational research assistant with ADA and GPT3.5
    2. [x] Count embedding costs and embedding step before moving to chat
       1. [x] use database to pass data between functions
    3. [x] Add context handler in the chat
-   4. [ ] Fix session name formatting (account for ' ' and '-')
-   5. [ ] Set a dedicated dir to store .db
+   4. [x] Fix session name formatting (account for ' ' and '-')
+   5. [x] Set a dedicated dir to store .db
    6. [ ] Test for session exclusive database
-   7. [ ] Implement safe way of handling user's api keys
+   7. [x] Implement safe way of handling user's api keys
    8. [ ] Allow for context table extract (to JSON)
 6. [x] Test on longer pdfs (books)
    1. [ ] Refactor embedding function so it sends no more than {{limit}} api calls per minute

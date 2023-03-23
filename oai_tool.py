@@ -1,4 +1,4 @@
-import tiktoken, openai
+import tiktoken, openai, time
 import numpy as np
 
 # Count tokens for each chapter
@@ -28,13 +28,22 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
 
 
 # Build simple embedding function
-def get_embedding(text, model="text-embedding-ada-002"):
-    """Returns the embedding for a given text.
-    """
-    return openai.Embedding.create(
+def get_embedding(
+        text, 
+        model="text-embedding-ada-002", 
+        calls_per_minute=60
+        ):
+    """Returns the embedding for a given text. Limit calls per minute"""
+    time_delay = 60 / calls_per_minute
+    
+    embedding = openai.Embedding.create(
         input=text, 
         model=model,
         )['data'][0]['embedding']
+    
+    time.sleep(time_delay)
+    return embedding
+
 
 def vector_similarity(x, y):
     """
