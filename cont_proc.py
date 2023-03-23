@@ -6,9 +6,37 @@ import params as prm
 from oai_tool import num_tokens_from_messages, get_embedding
 
 
+## Various processors
+def process_name(name):
+    """Process name string to make it suitable for db and further processing.
+    Current support for pdfs. In the future will support other file types.
+    """
 
-## Content processing functions
+    # catch pdfs
+    pdf_ = False
+    if '.pdf' in name:
+        # get name stem
+        pdf_ = True
+        name = name.split('.pdf')[0]
 
+    name = name.strip()
+    # use regex to replace all whitespaces with underscore
+    name = re.sub(r'\s+', '_', name)
+    # exclude all signs that conflict with SQLite
+    name = re.sub(r'[^\w]', '', name)
+    name = name.lower()
+
+    # truncate if needed
+    if len(name) > 100:
+        name = name[:100]
+    
+    if pdf_:
+        return name + '.pdf'
+    else:
+        return name
+
+
+## Text processing functions
 def clean_text(text):
     text = text.replace('\t', ' ')
     text = text.strip().lower()
@@ -43,6 +71,7 @@ def pages_to_dataframe(pages):
 
     return doc_contents_df
 
+
 def split_contents(x):
     """Split contents into number of chunks defined by split_factor
     e.g. if split factor = 2 then split contents into 2 chunks
@@ -50,6 +79,7 @@ def split_contents(x):
     thres = int(len(x['contents'])/x['split_factor'])
 
     return [x['contents'][i:i+thres] for i in range(0, len(x['contents']), thres)]
+
 
 def split_pages(pages_df, session_name):
     """Split pages that are too long for the model

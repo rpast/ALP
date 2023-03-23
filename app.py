@@ -35,16 +35,22 @@ def welcome():
 def set_session_details():
     """Set the API key, session name, upload pdf."""
 
-    # get the data from the form
-    api_key = request.form['api_key']
+    ## Get the data from the form
+
+    # Pass API key right to the openai object
+    openai.api_key = request.form['api_key']
     session_name = request.form['session_name']
     file = request.files['pdf']
+
+    # make sure names are correctly formatted
+    session_name = cproc.process_name(session_name)
+    file_name = cproc.process_name(file.filename)
 
     # Create the db and file codes + save the file
     session['DB_CODE'] = session_name + '_' + app.config['TIME']
 
-    file_name = session['DB_CODE'] + '_' + file.filename.lower().strip().replace(' ', '_')
-    fpath = os.path.join(app.config['UPLOAD_FOLDER'], file_name)
+    saved_fname = session['DB_CODE'] + '_' + file_name
+    fpath = os.path.join(app.config['UPLOAD_FOLDER'], saved_fname)
     file.save(fpath)
 
     # Load the pdf and split it into pages
@@ -62,7 +68,7 @@ def set_session_details():
     dbh.insert_context(conn, session['DB_CODE'], pages_refined_df)
     conn.close()
 
-    openai.api_key = api_key
+    
 
     embedding_cost = cproc.embed_cost(pages_refined_df)
 
