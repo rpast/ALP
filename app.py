@@ -1,10 +1,10 @@
-import os, openai, time, datetime, json
+import os, openai, time, datetime, json, io
+
+from flask import Flask, request, session, render_template, redirect, url_for, jsonify, send_file
+from langchain.document_loaders import PyPDFLoader
 import pandas as pd
 
-from flask import Flask, request, session, render_template, redirect, url_for, jsonify
-
-from langchain.document_loaders import PyPDFLoader
-
+## Local modules import
 from chatbot import Chatbot
 import params as prm
 import cont_proc as cproc
@@ -251,6 +251,38 @@ def ask():
 
 
     return jsonify({'response': response})
+
+
+@app.route('/export_interactions', methods=['GET'])
+def export_interactions():
+    """Export the interaction table as a JSON file for download.
+    """
+
+    # Connect to the database
+    conn = dbh.create_connection(session['DB_PTH'])
+    # Retrieve the interaction table
+    recall_df = dbh.fetch_recall_table(session['DB_CODE'], conn)
+    conn.close()
+    # remove records that are user or assistant interaction type and have time signature 0 - these were injected into the table as a seed to improve performance of the model at the beginning of the conversation
+    seed_f = (
+        (recall_df['interaction_type'].isin(['user','assistant'])) & (recall_df['time_signature'] == '0')
+        )
+    recall_df = recall_df[~seed_f]
+
+    # Convert the DataFrame to a JSON string
+    interactions_json = recall_df.to_json(orient='records', indent=2)
+
+    # Create a file-like buffer to hold the JSON string
+    json_buffer = io.BytesIO()
+    json_buffer.write(interactions_json.encode('utf-8'))
+    json_buffer.seek(0)
+
+    # Send the JSON file to the user for download
+    return send_file(
+        json_buffer, 
+        as_attachment=True, 
+        attachment_filename=f"interactions_{session['DB_CODE']}.json", 
+        mimetype='application/json')
 
 
 

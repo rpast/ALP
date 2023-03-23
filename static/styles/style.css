@@ -50,7 +50,7 @@ html, body {
 .input-container {
     width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     margin-top: 1rem;
     padding-bottom: 1rem;
@@ -80,6 +80,14 @@ textarea {
     margin-bottom: 1rem;
 }
 
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 33%;
+    margin-left: 1em;
+}
+
 input[type="text"], input[type="file"] {
     width: 100%;
 }
@@ -87,7 +95,7 @@ input[type="text"], input[type="file"] {
 #ask-form {
     width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
 }
 
@@ -104,6 +112,9 @@ input[type="file"] {
     text-overflow: ellipsis; /* Add ellipsis when the text overflows */
     white-space: nowrap; /* Prevent text from wrapping to the next line */
     overflow: hidden; /* Hide overflowing text */
+}
+input[type="submit"] {
+    max-width: 100px;
 }
 
 
