@@ -3,24 +3,33 @@
 <head>
     <title>ALP</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href='../static/styles/style.css'>
 </head>
 <body>
-    <div class="main-container">
-        <div class="container">
-            <div class="response-container">
-                <div id="response"></div>
-                <img src="/static/processing.gif" id="processing" style="display: none; width:128px;">
+    <div class="hero">
+        <div class="chat-container">
+            <div class="chat-box">
+                <div class="response-container">
+                    <div id="response"></div>
+                    <div class="spinner" id="processing" style="display: none;">
+                        <div class="cube1"></div>
+                        <div class="cube2"></div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="input-container">
-            <form id="ask-form">
-                <!-- <label for="question">User Input:</label> -->
-                <textarea name="question" required></textarea><br><br>
-                <input type="submit" value="Ask">
-            </form>
+            <div class="input-container">
+                <form id="ask-form">
+                    <!-- <label for="question">User Input:</label> -->
+                    <textarea name="question" required></textarea><br><br>
+                    <input type="submit" value="Ask">
+                </form>
+            </div>
         </div>
     </div>
     <script src="../static/scripts/chat.js"></script>
+
 </body>
 </html>

@@ -5,72 +5,131 @@ html, body {
     background-color: #000;
     font-family: 'Arial', 'Helvetica', sans-serif;
     color: #f1f1f1;
+}
+
+.hero {
+    min-height: 100vh;
+    background: linear-gradient(45deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/static/libhero.jpg') no-repeat center center;
+    background-size: cover;
     display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.chat-container {
+    width: 72%; /* Added width */
+    max-width: 1200px; /* Added max-width */
+    min-height: 90vh; /* Updated from 100vh to 90vh */
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.6), rgba(60, 60, 60, 0.6));
+    display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
 }
 
-textarea {
-    width: 60%;
-    height: 4em;
-    resize: vertical;
-}
-
-label {
-    display: inline-block;
-    width: 30%;
-    text-align: right;
-    padding-right: 1em;
-}
-
-input[type="text"] {
-    width: 100%;
-}
-
-.main-container {
-    width: 72vw;
-    height: 90vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background-color: #333;
+.chat-box {
+    flex-grow: 1; /* Added flex-grow */
+    width: 100%; /* Updated from 66% to 100% */
+    background-color: rgba(68, 68, 68, 0.801);
     border-radius: 10px;
-    overflow: hidden;
+    padding: 2em;
+    overflow-y: auto; /* Added overflow-y */
 }
-
-.container {
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-    flex: 1;
-    overflow: hidden;
-}
-
 
 .response-container {
-    width: 66.66%;
-    max-width: 1000px;
-    text-align: left;
+    width: 100%;
+    height: calc(90vh - 8em); /* Set the height to 90% of the viewport height minus the space taken by the input container and other elements */
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    overflow-y: auto;
-    flex: 1;
-    padding: 1em;
+    overflow-y: auto; /* Add a scrollbar when the content overflows */
+    padding: 1em; /* Add padding around the text */
 }
 
 .input-container {
     width: 100%;
     display: flex;
     justify-content: center;
-    padding: 1em;
-    background-color: #222;
+    align-items: center;
+    margin-top: 1rem;
+    padding-bottom: 1rem;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+textarea {
+    width: 100%; /* Updated from 60% to 100% */
+    height: 4em;
+    resize: vertical;
+}
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column; /* Change from column to row */
+    justify-content: right; /* Align content to the start of the row */
+    align-items: left; /* Vertically align the content to the center */
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+input[type="text"], input[type="file"] {
+    width: 100%;
 }
 
 #ask-form {
     width: 100%;
-    max-width: 1000px;
     display: flex;
     justify-content: center;
     align-items: center;
-} 
+}
+
+#button {
+    padding: 1em;
+}
+
+
+input[type="text"], input[type="file"] {
+    width: 400px; /* Set a fixed width for the input fields */
+    max-width: 100%;
+}
+input[type="file"] {
+    text-overflow: ellipsis; /* Add ellipsis when the text overflows */
+    white-space: nowrap; /* Prevent text from wrapping to the next line */
+    overflow: hidden; /* Hide overflowing text */
+}
+
+
+
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    position: relative;
+}
+.cube1,
+.cube2 {
+width: 20px;
+height: 8px;
+background-color: #390606;
+position: absolute;
+animation: bump 1.8s infinite ease-in-out;
+}
+.cube2 {
+animation-delay: -0.9s;
+}
+@keyframes bump {
+    0%, 80%, 100% {
+    transform: translateY(0);
+    }
+    40% {
+    transform: translateY(-10px);
+    }
+}

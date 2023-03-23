@@ -27,6 +27,7 @@ chatbot = Chatbot()
 print("!Chatbot initialized")
 
 
+
 # Render welcome page
 @app.route('/')
 def welcome():
