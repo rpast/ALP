@@ -13,7 +13,10 @@ import cont_proc as cproc
 import db_handler as dbh
 import oai_tool as oai
 
-
+# Serve app to prod
+from waitress import serve
+import webbrowser
+from threading import Timer
 
 app = Flask(__name__)
 
@@ -289,7 +292,15 @@ def export_interactions():
         mimetype='application/json')
 
 
+def open_browser():
+    """Open default browser to display the app."""
+    webbrowser.open_new('http://127.0.0.1:5000/')
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # # Run DEV server
+    # app.run(debug=True, host='0.0.0.0', port=5000)
+
+    #run PROD server
+    Timer(1, open_browser).start()
+    serve(app, host='0.0.0.0', port=5000)
