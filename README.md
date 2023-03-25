@@ -1,40 +1,93 @@
 # ALP
 
-_Work in progress_
+ALP is an open-source, knowledge-grounded conversational AI system designed to generate responses grounded in relevant knowledge from external sources.
+ALP is currently in development, but it can be used locally on users' machines. Built with simplicity and efficiency in mind, ALP reads chosen PDF file, has unlimited conversational memory and the ability to export conversation and source embeddings in JSON format.
 
-Conversational research assistant with ADA and GPT3.5
+## Table of Contents
 
+- [Introduction](##Introduction)
+- [Features](##Features)
+- [Installation](##Installation)
+- [Configuration](##Configuration)
+- [Usage](##Usage)
+- [Demo](##Demo)
+- [Todo](##Todo)
 
-## Features
-1. Automated pdf content preprocessing.
-2. Accurate context building through nearest neighbors context selection with embedding vectors on passed source material.
-3. Conversation history stored in local SQLite db.
-4. System holds memory of past conversations and makes use of it in the conversation.
+## Introduction
+ALP is designed to enhance the accuracy of responses of GPT-3.5 model related to a specific PDF document by using a retrieval augmentation technique. This approach ensures that the most relevant context is always provided to the model with user's question. ALP was created to help me manage the overwhelming knowledge base of research papers, books and notes, making it easier to access crucial information without having to read through everything.
 
-## Models used
+Currently ALP utilizes following models:
 1. ```text-embedding-ada-002```
 2. ```gpt-3.5-turbo```. 
+
+## Features
+- **Conversational research assistant**: Interact with and get information from loaded PDF files.
+- **Unlimited conversational memory**: Retain information from previous conversations for context-aware responses.
+- **Support for long documents**: You can upload books. The only thing that limits you is your API limit.
+- **JSON export**: Export conversation and source embeddings as JSON format.
+- **Retrieval augmentation**: Utilize retrieval augmentation techniques for improved accuracy. Read more [here](https://arxiv.org/pdf/2104.07567.pdf).
+- **Local deployment**: Spin up ALP locally on your machine for privacy and convenience.
+
+## Installation
+To set up ALP on your local machine, follow these steps:
+
+1. **Install Python:**
+
+Make sure you have Python installed on your machine. We recommend installing [Anaconda](https://www.anaconda.com/products/distribution) for an easy setup, although it may not be the most resource-efficient option.
+
+2. **Clone the repository:**
+
+\```bash
+git clone https://github.com/yourusername/alp.git
+cd alp
+\```
+
+3. **Create a virtual environment and activate it:**
+
+\```bash python3 -m venv venv
+source venv/bin/activate
+\```
+
+For Windows users:
+
+\```bash
+python -m venv venv
+venv\Scripts\activate
+\```
+
+4. **Install the required dependencies:**
+
+\```bash
+pip install -r requirements.txt
+\```
+
+## Configuration
+By default, ALP runs on `localhost`
+
+
+## Usage
+5. **Run the ALP application:**
+
+\```bash
+python alp.py
+\```
+
+6. **Access the application:**
+   
+The app should open in your default web browser. If it doesn't, navigate to http://localhost:5000.
+
+7. **Start using ALP:**
+
+Provide a session name, API key, and select PDF for upload to start interacting with the conversational research assistant.
 
 ## Demo
 <img src="https://github.com/rpast/ALP/blob/master/static/alp_demo_webapp.gif?raw=true"></img>
 
+
 ## Todo
-1. [x] Inject origin conversation context to the interaction database
-2. [x] Hold latest exchange in the context, so the model is able to retrieve it without nearest neighbors on embedding space
-3. [x] Count tokens in the context window and display to user
-4. [x] Refactor code into .py script 
-5. [x] Wrap the code into Flask app
-   1. [x] PDF upload and preprocessing.
-   2. [x] Count embedding costs and embedding step before moving to chat
-      1. [x] use database to pass data between functions
-   3. [x] Add context handler in the chat
-   4. [x] Fix session name formatting (account for ' ' and '-')
-   5. [x] Set a dedicated dir to store .db
-   6. [ ] Test for session exclusive database
-   7. [x] Implement safe way of handling user's api keys
-   8. [x] Allow for context table extract (to JSON)
-6. [x] Test on longer pdfs (books)
-   1. [x] Refactor embedding function so it sends no more than {{limit}} api calls per minute
-   2. [ ] Implement alternative embedding models
-7. [ ] Implement whisper audio-to-text module
-8. [ ] Implement models for ai content detection
+1. [ ] Allow user to continue conversations on another sessions.
+2. [ ] Display sources used by the agent for the answer.
+3. [ ] Allow user to upload more than one document
+4. [ ] User is able to upload text from other sources 
+5. [ ] Implement alternative embedding models
+6. [ ] Implement models for ai content detection
