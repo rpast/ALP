@@ -5,13 +5,15 @@ ALP is currently in development, but it can be used locally on users' machines. 
 
 ## Table of Contents
 
-- [Introduction](##Introduction)
-- [Features](##Features)
-- [Installation](##Installation)
-- [Configuration](##Configuration)
-- [Usage](##Usage)
-- [Demo](##Demo)
-- [Todo](##Todo)
+- [ALP](#alp)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Configuration](#configuration)
+  - [Usage](#usage)
+  - [Demo](#demo)
+  - [Todo](#todo)
 
 ## Introduction
 ALP is designed to enhance the accuracy of responses of GPT-3.5 model related to a specific PDF document by using a retrieval augmentation technique. This approach ensures that the most relevant context is always provided to the model with user's question. ALP was created to help me manage the overwhelming knowledge base of research papers, books and notes, making it easier to access crucial information without having to read through everything.
