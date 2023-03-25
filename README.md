@@ -39,29 +39,30 @@ Make sure you have Python installed on your machine. We recommend installing [An
 
 2. **Clone the repository:**
 
-\```bash
-git clone https://github.com/yourusername/alp.git
+```bash 
+git clone https://github.com/yourusername/alp.git 
 cd alp
-\```
+```
 
 3. **Create a virtual environment and activate it:**
 
-\```bash python3 -m venv venv
+```bash 
+python3 -m venv venv 
 source venv/bin/activate
-\```
+```
 
 For Windows users:
 
-\```bash
-python -m venv venv
+```bash
+python -m venv venv 
 venv\Scripts\activate
-\```
+```
 
 4. **Install the required dependencies:**
 
-\```bash
+```bash
 pip install -r requirements.txt
-\```
+```
 
 ## Configuration
 By default, ALP runs on `localhost`
@@ -70,9 +71,9 @@ By default, ALP runs on `localhost`
 ## Usage
 5. **Run the ALP application:**
 
-\```bash
+```bash
 python alp.py
-\```
+```
 
 6. **Access the application:**
    
