@@ -1,3 +1,5 @@
 secret.txt
 data/
-logic_bak/ 
+logic_bak/
+alp_venv/
+app.db

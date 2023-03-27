@@ -14,27 +14,23 @@ import db_handler as dbh
 import oai_tool as oai
 
 # Serve app to prod
-from waitress import serve
 import webbrowser
+from waitress import serve
 from threading import Timer
 
+template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)),"static")
 
 app = Flask(
     __name__, 
-    template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates"),
-    static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)),"static"
+    template_folder=template_folder,
+    static_folder=static_folder
     )
-)
 
 
 app.secret_key = os.urandom(24)
-app.config['UPLOAD_FOLDER'] = prm.UPLOAD_FOLDER
-
 now = time.time()
 date = datetime.datetime.fromtimestamp(now)
-app.config['TIME'] = str(int(now))
-app.config['DATE'] = date
-
 
 
 
@@ -51,7 +47,10 @@ def set_session_details():
     ## Get the data from the form
 
     # Pass API key right to the openai object
-    openai.api_key = request.form['api_key']
+    with open(os.path.join(static_folder, 'data/apikey.txt'), 'r') as f:
+        openai.api_key = f.read()
+    # openai.api_key = request.form['api_key']
+
     session_name = request.form['session_name']
     file = request.files['pdf']
 
@@ -60,14 +59,15 @@ def set_session_details():
     file_name = cproc.process_name(file.filename)
 
     # Pre-process uploaded source file, create the session db and save
-    session['DB_CODE'] = session_name + '_' + app.config['TIME']
+    session['SESSION_TIME'] = str(int(time.time()))
+    session['DB_CODE'] = session_name + '_' + session['SESSION_TIME']
     # Session DB path = DB_FOLDER + session_name + time
     session['DB_PTH'] = os.path.join(prm.DB_FOLDER, f"{session['DB_CODE']}.db")
     # create db path with os.join
 
     # Save the file to the upload folder
     saved_fname = session['DB_CODE'] + '_' + file_name
-    fpath = os.path.join(app.config['UPLOAD_FOLDER'], saved_fname)
+    fpath = os.path.join(prm.UPLOAD_FOLDER, saved_fname)
     file.save(fpath)
 
     # Load the pdf process the text
@@ -79,7 +79,7 @@ def set_session_details():
     # Create session table
     conn = dbh.create_connection(session['DB_PTH'])
     dbh.create_table(conn, prm.SESSION_TABLE_SQL)
-    dbh.insert_session(conn, session['DB_CODE'], app.config['DATE'])
+    dbh.insert_session(conn, session['DB_CODE'], date)
     dbh.insert_context(conn, session['DB_CODE'], pages_refined_df)
     conn.close()
 
@@ -243,6 +243,7 @@ def ask():
 
 
     # Open DB so the assistant can remember the conversation
+    session['SPOT_TIME'] = str(int(time.time()))
     conn = dbh.create_connection(session['DB_PTH'])
     # Insert user message into DB so we can use it for another user's input
     dbh.insert_interaction(
@@ -250,7 +251,7 @@ def ask():
         session['DB_CODE'], 
         'user', 
         question,
-        app.config['TIME']
+        session['SPOT_TIME']
         )
     # Insert model's response into DB so we can use it for another user's input
     dbh.insert_interaction(
@@ -304,9 +305,9 @@ def open_browser():
 
 
 if __name__ == '__main__':
-    # # Run DEV server
-    # app.run(debug=True, host='0.0.0.0', port=5000)
+    # Run DEV server
+    app.run(debug=True, host='0.0.0.0', port=5000)
 
     #run PROD server
-    Timer(1, open_browser).start()
-    serve(app, host='0.0.0.0', port=5000)
+    # Timer(1, open_browser).start()
+    # serve(app, host='0.0.0.0', port=5000)
