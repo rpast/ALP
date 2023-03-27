@@ -2,7 +2,7 @@ import tiktoken, openai, time
 import numpy as np
 
 # Count tokens for each chapter
-def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
+def num_tokens_from_messages(messages, model="gpt-3.5-turbo"):
     """Returns the number of tokens used by a list of messages.
     """
     
@@ -10,7 +10,7 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
         encoding = tiktoken.encoding_for_model(model)
     except KeyError:
         encoding = tiktoken.get_encoding("cl100k_base")
-    if model == "gpt-3.5-turbo-0301":  # note: future models may deviate from this
+    if model == "gpt-3.5-turbo":  # note: future models may deviate from this
         num_tokens = 0
         for message in messages:
             num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n

@@ -1,12 +1,18 @@
 """This file contains all the parameters for the project
 """
 
+import os, sys
 from pathlib import Path
 
 
 ## General parameters ##
-DB_FOLDER = Path('./data/dbs')
-UPLOAD_FOLDER = Path('./data/uploads')
+
+STATIC_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+DB_FOLDER = os.path.join(STATIC_FOLDER, "data", "dbs")
+UPLOAD_FOLDER = os.path.join(STATIC_FOLDER, "data", "uploads")
+
+DB_FOLDER = Path(f'./static/data/dbs')
+UPLOAD_FOLDER = Path(f'./static/data/uploads')
 
 TOKEN_THRES = 500 # Number of tokens to split the document into chunks
 NUM_SAMPLES = 5 # Number of samples to take from the document

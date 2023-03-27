@@ -18,7 +18,13 @@ from waitress import serve
 import webbrowser
 from threading import Timer
 
-app = Flask(__name__)
+
+app = Flask(
+    __name__, 
+    template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates"),
+    static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)),"static"
+    )
+)
 
 
 app.secret_key = os.urandom(24)

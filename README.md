@@ -1,7 +1,7 @@
 # ALP
 
 ALP is an open-source, knowledge-grounded conversational AI system designed to generate responses grounded in relevant knowledge from external sources.
-ALP is currently in development, but it can be used locally on users' machines. Built with simplicity and efficiency in mind, ALP reads chosen PDF file, has unlimited conversational memory and the ability to export conversation and source embeddings in JSON format.
+ALP is currently in development, but it can be used locally on users' machines. Built with simplicity in mind, ALP reads chosen PDF file, has unlimited conversational memory and the ability to export conversation and source embeddings in JSON format.
 
 ## Table of Contents
 
