@@ -48,16 +48,10 @@ class DatabaseHandler:
             print('No connection to close.')
 
 
-    def create_table(self, create_table_sql):
-        try:
-            c = self.conn.cursor()
-            c.execute(create_table_sql)
-            print('Created table.')
-        except Exception as e:
-            print(e)
-
-
-    def parse_tables(self):
+    def parse_tables(self) -> list:
+        """Parse the database and return a list of table names.
+        :return: list of table names
+        """
         try:
             c = self.conn.cursor()
             c.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -66,7 +60,11 @@ class DatabaseHandler:
             print(e)
 
 
-    def query_db(self, query):
+    def query_db(self, query) -> list:
+        """Query the database.
+        :param query: SQL query
+        :return: list of tuples
+        """
         try:
             c = self.conn.cursor()
             c.execute(query)
@@ -75,20 +73,23 @@ class DatabaseHandler:
             print(e)
 
 
-    def write_db(self, query):
+    def write_db(self, query) -> None:
+        """Write to the database.
+        :param query: SQL query
+        :return: None
+        """
         try:
             c = self.conn.cursor()
             c.execute(query)
             self.conn.commit()
+            print(f'Query: \'{query}\' executed')
         except Exception as e:
             print(e)
 
 
-    def insert_session(self, sname, sdate):
+    def insert_session(self, sname, sdate) -> bool:
         """Insert session data into the database's Sessions table.
-        :param conn: Connection object
         :param sname: session name
-        :param sid: session id
         :param sdate: session date
         :return:
         """
@@ -98,11 +99,11 @@ class DatabaseHandler:
             c.execute(f"SELECT * FROM session WHERE session_name = '{sname}'")
             if c.fetchall():
                 print(f"Session: \"{sname}\" already in the database")
-                return None
+                return False
             
             if sname.find('-') == '-1':
                 print("Session name cannot contain \"-\",\"!\",\"?\",\".\" characters")
-                return None
+                return False
             
             
             c.execute(f"INSERT INTO session VALUES ('{sname}', '{sdate}')")
@@ -114,17 +115,19 @@ class DatabaseHandler:
         except Exception as e:
             print(e)
 
+# FOR TESTING PURPOSES ONLY
+# cont_df = pd.DataFrame({'session_name':['test_session_1','test_session_1'],'chapter_title':['test_chap', 'test_chap2'], 'chapter_text':['This text is for chapter1', 'This text is for chapter2'], 'chapter_token_no':[465,541], 'champter_embeddings':[[21354.4546,4465],[5648,4535,2413]]})
 
-    def insert_context(self, session_name):
+    def insert_context(self, context_df, session_name):
         """Insert context data into the database
-        :param conn: Connection object
         :param session_name: session name
         :param context_df: context dataframe
         :return:
         """
         try:
-            self.to_sql(f'context_{session_name}', self.conn, if_exists='replace', index=False)
-            print (f"Context table for session: \"{session_name}\" created")
+            context_name = f'context_{session_name}'
+            context_df.to_sql(context_name, self.conn, if_exists='replace', index=False)
+            print (f"Context table: \"{context_name}\" created")
             return True
         except Exception as e:
             print(e)
@@ -211,6 +214,7 @@ class DatabaseHandler:
 
         return master_df
     
+
     def __repr__(self) -> str:
         return f"DBManager({self.db_file})"
 
