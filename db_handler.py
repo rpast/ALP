@@ -8,6 +8,7 @@ import pandas as pd
 import params as prm
 from oai_tool import get_embedding
 
+
 class DatabaseHandler:
     """Handles the database connection and queries. One instance per database file.
     """
@@ -88,6 +89,7 @@ class DatabaseHandler:
         except Exception as e:
             print(e)
 
+
     # TODO: use high performance library for writing pandas dataframes to sqlite
     def insert_session(self, sname, sdate) -> bool:
         """Insert session data into the database's Sessions table.
@@ -119,8 +121,6 @@ class DatabaseHandler:
             print(e)
 
 
-
-    # TBC => refactor to single context table
     def insert_context(self, context_df, table_name='context', if_exist='append'):
         """Insert context data into the database
         :param context_df: context dataframe
@@ -194,7 +194,6 @@ class DatabaseHandler:
             return False
 
 
-
     def fetch_recall_table(self, session_name) -> pd.DataFrame:
         """Query the database for the recall table for the given session_name
         Recal table is a table that contains the context data for the given session_name and the interaction data for the given session_name
@@ -227,6 +226,7 @@ class DatabaseHandler:
 
     def __repr__(self) -> str:
         return f"DBManager({self.db_file})"
+
 
 
 

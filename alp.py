@@ -11,6 +11,7 @@ from chatbot import Chatbot
 import params as prm
 import cont_proc as cproc
 import db_handler as dbh
+from db_handler import DatabaseHandler
 import oai_tool as oai
 
 # Serve app to prod
@@ -29,10 +30,19 @@ app = Flask(
 
 
 app.secret_key = os.urandom(24)
-now = time.time()
-date = datetime.datetime.fromtimestamp(now)
 
 
+# Intitiate database if not exist
+db_exist = os.path.exists(prm.DB_PATH)
+if not db_exist:
+    db = DatabaseHandler(prm.DB_PATH)
+    db.write_db(prm.SESSION_TABLE_SQL)
+    db.write_db(prm.INTERIM_CONTEXT_TABLE_SQL)
+    db.write_db(prm.CONTEXT_TABLE_SQL)
+    db.close_connection()
+else:
+    db = DatabaseHandler(prm.DB_PATH)
+    db.close_connection()
 
 
 # Render welcome page
@@ -45,7 +55,6 @@ def set_session_details():
     """Set the API key, session name, upload pdf."""
 
     ## Get the data from the form
-
     # Pass API key right to the openai object
     with open(os.path.join(static_folder, 'data/apikey.txt'), 'r') as f:
         openai.api_key = f.read()
@@ -60,13 +69,11 @@ def set_session_details():
 
     # Pre-process uploaded source file, create the session db and save
     session['SESSION_TIME'] = str(int(time.time()))
-    session['DB_CODE'] = session_name + '_' + session['SESSION_TIME']
-    # Session DB path = DB_FOLDER + session_name + time
-    session['DB_PTH'] = os.path.join(prm.DB_FOLDER, f"{session['DB_CODE']}.db")
-    # create db path with os.join
+    session['SESSION_DATE'] = datetime.datetime.fromtimestamp(time.time())
+    session['SESSION_NAME'] = session_name
 
     # Save the file to the upload folder
-    saved_fname = session['DB_CODE'] + '_' + file_name
+    saved_fname = session['SESSION_NAME'] + '_' + file_name
     fpath = os.path.join(prm.UPLOAD_FOLDER, saved_fname)
     file.save(fpath)
 
@@ -74,15 +81,13 @@ def set_session_details():
     loader = PyPDFLoader(fpath)
     pages = loader.load_and_split()
     pages_df = cproc.pages_to_dataframe(pages)
-    pages_refined_df = cproc.split_pages(pages_df, session['DB_CODE'])
+    pages_refined_df = cproc.split_pages(pages_df, session['SESSION_NAME'])
     
-    # Create session table
-    conn = dbh.create_connection(session['DB_PTH'])
-    dbh.create_table(conn, prm.SESSION_TABLE_SQL)
-    dbh.insert_session(conn, session['DB_CODE'], date)
-    dbh.insert_context(conn, session['DB_CODE'], pages_refined_df)
-    conn.close()
-    # OOP refactor notes: first context insert is to interim db with 'if exist = replace flag. This doesnt comply with concurrency but we dont care about that for now.
+    # Populate session and interim context table
+    db.create_connection(prm.DB_PATH)
+    db.insert_session(session['SESSION_NAME'], session['SESSION_DATE'])
+    db.insert_context(pages_refined_df, table_name='interim_context', if_exist='replace')
+    db.close_connection()
 
     # Get the embedding cost
     embedding_cost = round(cproc.embed_cost(pages_refined_df),4)
@@ -90,7 +95,6 @@ def set_session_details():
     embedding_cost = f"${embedding_cost}"
     doc_length = pages_refined_df.shape[0]
     length_warning = doc_length / 60 > 1
-
 
     return render_template(
         'summary.html', 
@@ -101,6 +105,7 @@ def set_session_details():
         )
 
 
+# TBC => implement dbhandler from here ###################
 @app.route('/start_embedding', methods=['POST'])
 def start_embedding():
     """Start the embedding process

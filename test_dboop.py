@@ -6,7 +6,7 @@ import openai
 import numpy as np
 from langchain.document_loaders import PyPDFLoader
 
-openai.api_key = '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'
+openai.api_key = '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'
 
 # create db
 db = DatabaseHandler('app.db')

@@ -128,7 +128,7 @@ def split_pages(pages_df, session_name):
 
 def embed_cost(pages_contents_long_df, price_per_k=0.0004):
     """Calculate the cost of running the model to get embeddings"""
-    embed_cost = (pages_contents_long_df['num_tokens_oai'].sum() / 1000) * price_per_k
+    embed_cost = (pages_contents_long_df['text_token_no'].sum() / 1000) * price_per_k
     return embed_cost
 
 
