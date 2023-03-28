@@ -11,6 +11,8 @@ from oai_tool import get_embedding
 class DatabaseHandler:
     """Handles the database connection and queries. One instance per database file.
     """
+
+    
     def __init__(self, db_file):
         """Create a new database file if it doesn't exist, otherwise connect to the existing database file."""
         self.db_file = db_file
@@ -86,7 +88,7 @@ class DatabaseHandler:
         except Exception as e:
             print(e)
 
-
+    # TODO: use high performance library for writing pandas dataframes to sqlite
     def insert_session(self, sname, sdate) -> bool:
         """Insert session data into the database's Sessions table.
         :param sname: session name
@@ -101,6 +103,7 @@ class DatabaseHandler:
                 print(f"Session: \"{sname}\" already in the database")
                 return False
             
+            # TODO: use dedicated python library for string validation
             if sname.find('-') == '-1':
                 print("Session name cannot contain \"-\",\"!\",\"?\",\".\" characters")
                 return False
@@ -115,97 +118,104 @@ class DatabaseHandler:
         except Exception as e:
             print(e)
 
-# FOR TESTING PURPOSES ONLY
-# cont_df = pd.DataFrame({'session_name':['test_session_1','test_session_1'],'chapter_title':['test_chap', 'test_chap2'], 'chapter_text':['This text is for chapter1', 'This text is for chapter2'], 'chapter_token_no':[465,541], 'champter_embeddings':[[21354.4546,4465],[5648,4535,2413]]})
 
-    def insert_context(self, context_df, session_name):
+
+    # TBC => refactor to single context table
+    def insert_context(self, context_df, table_name='context', if_exist='append'):
         """Insert context data into the database
-        :param session_name: session name
         :param context_df: context dataframe
         :return:
         """
         try:
-            context_name = f'context_{session_name}'
-            context_df.to_sql(context_name, self.conn, if_exists='replace', index=False)
-            print (f"Context table: \"{context_name}\" created")
+            context_df.to_sql(table_name, self.conn, if_exists=if_exist, index=False)
+            print (f"Context data inserted into the {table_name} table")
             return True
         except Exception as e:
             print(e)
             return False
+        
+
+    def load_context(self, session_name, table_name='context') -> pd.DataFrame:
+        """Load context data from the database to a dataframe
+        :param table_name: table name
+        :return:
+        """
+        try:
+            c = self.conn.cursor()
+            c.execute(f"SELECT * FROM {table_name} WHERE SESSION_NAME = '{session_name}'")
+            data = c.fetchall()
+            # get column names
+            colnames = [desc[0] for desc in c.description]
+            context_df = pd.DataFrame(data, columns=colnames)
+
+            return context_df
+        
+        except Exception as e:
+            print(e)
+
+            return None
 
 
-    def insert_interaction(self, session_name, inter_type, message, timestamp=0):
-        """Insert interaction data into the database
-        :param conn: Connection object
+    def insert_interaction(self, session_name, inter_type, message, page=None, edges=None, timestamp=0) -> bool:
+        """Insert interaction data into the database's Interaction table.
         :param session_name: session name
-        :param inter_type: interaction type (user, assistant)
-        :param messages: list of messages
-        :param embeddings: list of embeddings
+        :param inter_type: interaction type
+        :param message: interaction message
+        :param page: page number
+        :param edges: edges
+        :param timestamp: timestamp
         :return:
         """
 
         embedding = get_embedding(message)
 
-        encoding = tiktoken.encoding_for_model('gpt-3.5-turbo-0301')
+        encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
         num_tokens_oai = len(encoding.encode(message))
 
         message = message.replace('"', '').replace("'", "")
 
+        query = f"INSERT INTO context VALUES ('{session_name}', '{inter_type}', '{message}', '{num_tokens_oai}', '{page}', '{embedding}', '{edges}','{timestamp}')"
+
         try:
             c = self.conn.cursor()
-
-            c.execute(f"INSERT INTO interaction_{session_name} VALUES ('{session_name}', '{inter_type}', '{message}', '{embedding}','{num_tokens_oai}', '{timestamp}')")
+            c.execute(
+                query
+                )
 
             self.conn.commit()
 
             print(f"Interaction type: \"{inter_type}\" inserted into the database for session: \"{session_name}\"")
+
             return True
+        
         except Exception as e:
             print(e)
+
             return False
 
 
-    def bulk_insert_interaction(self, usr_txt, asst_txt, session_name):
-        """
-        Insert user and assistant interactions into DB
-        """
 
-        # Insert user message into DB so we can use it for another user's input
-        insert_interaction(
-            self.conn, 
-            session_name, 
-            'user', 
-            usr_txt
-            )
-        # Insert model's response into DB so we can use it for another user's input
-        insert_interaction(
-            self.conn,
-            session_name,
-            'assistant',
-            asst_txt
-            )
-
-
-    def fetch_recall_table(self, session_name):
+    def fetch_recall_table(self, session_name) -> pd.DataFrame:
         """Query the database for the recall table for the given session_name
         Recal table is a table that contains the context data for the given session_name and the interaction data for the given session_name
 
         :param session_name: session name
         :return: recal table pd.DataFrame
         """
-
+        # Define the query to fetch the context table for the given session_name
         select_context = f"SELECT * FROM context_{session_name}"
+        
+        # Define the query to check if interaction table for given session_name exists in the database
         check_interaction = f"SELECT name FROM sqlite_master WHERE type='table' AND name='interaction_{session_name}'"
-
 
         # Fetch context table for given session_name
         context_df = pd.read_sql_query(select_context, self.conn)
-        interaction_df = pd.DataFrame(columns=['session_name', 'interaction_type', 'messages', 'embeddings'])
-
+        
         # Check if interaction table for given session_name exists in the database
         inter_check = query_db(self.conn, check_interaction)
         if not inter_check:
-            print(f"Interaction table for session: \"{session_name}\" does not exist in the database.")
+            print(f"Interaction table for session: \"{session_name}\" does not exist in the database. Fetcging context table only.")
+            interaction_df = pd.DataFrame(columns=['session_name', 'interaction_type', 'messages', 'embeddings'])
         else:
             interaction_df = pd.read_sql_query(f"SELECT * FROM interaction_{session_name}", self.conn)
         

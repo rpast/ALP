@@ -82,6 +82,7 @@ def set_session_details():
     dbh.insert_session(conn, session['DB_CODE'], date)
     dbh.insert_context(conn, session['DB_CODE'], pages_refined_df)
     conn.close()
+    # OOP refactor notes: first context insert is to interim db with 'if exist = replace flag. This doesnt comply with concurrency but we dont care about that for now.
 
     # Get the embedding cost
     embedding_cost = round(cproc.embed_cost(pages_refined_df),4)
@@ -107,11 +108,14 @@ def start_embedding():
     # Load context data from db
     conn = dbh.create_connection(session['DB_PTH'])
     pages_refined_df = pd.read_sql_query(f"SELECT * FROM context_{session['DB_CODE']}", conn)
+    ## db OOP refactor: load data from interim context table
 
     # Perform the embedding process here
     pages_embed_df = cproc.embed_pages(pages_refined_df)
+    ## db OOP refactor: use BLOB to store embedding data
     pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
 
+    ## db OOP refactor: insert data with embedding to main context table with if exist = append. Add edges column to the table.
     # Create context table
     dbh.insert_context(conn, session['DB_CODE'], pages_embed_df)
 
