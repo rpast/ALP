@@ -3,6 +3,7 @@ static/data/apikey.txt
 static/data/dbs/*
 static/data/uploads/*
 app.db
+ideas.txt
 
 # bak project files
 logic_bak/*

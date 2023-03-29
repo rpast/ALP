@@ -45,6 +45,11 @@ else:
     db.close_connection()
 
 
+# Spin up chatbot instance
+chatbot = Chatbot()
+print("!Chatbot initialized")
+
+
 # Render welcome page
 @app.route('/')
 def welcome():
@@ -105,26 +110,26 @@ def set_session_details():
         )
 
 
-# TBC => implement dbhandler from here ###################
 @app.route('/start_embedding', methods=['POST'])
 def start_embedding():
     """Start the embedding process
     """
-    # Load context data from db
-    conn = dbh.create_connection(session['DB_PTH'])
-    pages_refined_df = pd.read_sql_query(f"SELECT * FROM context_{session['DB_CODE']}", conn)
-    ## db OOP refactor: load data from interim context table
+    # Load context data from interim table
+    db.create_connection(prm.DB_PATH)
+    pages_refined_df = db.load_context(session['SESSION_NAME'], table_name='interim_context')
 
     # Perform the embedding process here
+    print('Embedding process started...')
     pages_embed_df = cproc.embed_pages(pages_refined_df)
-    ## db OOP refactor: use BLOB to store embedding data
+    print('Embedding process finished.')
+    ## TODO: try vectorstore to store embeddings
     pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
+    # Prepare for future functionalities
+    pages_embed_df['edges'] = None
 
-    ## db OOP refactor: insert data with embedding to main context table with if exist = append. Add edges column to the table.
-    # Create context table
-    dbh.insert_context(conn, session['DB_CODE'], pages_embed_df)
-
-    conn.close()
+    # insert data with embedding to main context table with if exist = append.
+    db.insert_context(pages_embed_df)
+    db.close_connection()
 
     return redirect(url_for('index'))
 
@@ -133,22 +138,26 @@ def start_embedding():
 def index():
     """render interaction main page"""
 
-    # Create interaction table
-    conn = dbh.create_connection(session['DB_PTH'])
-    dbh.create_table(conn, f"CREATE TABLE IF NOT EXISTS interaction_{session['DB_CODE']} (session_name, interaction_type, text, embedding, num_tokens_oai, time_signature)")
+    db.create_connection(prm.DB_PATH)
 
-    # Seed the interaction table with the context
-    dbh.bulk_insert_interaction(
-    conn, 
-    prm.SUMMARY_CTXT_USR, 
-    prm.SUMMARY_TXT_ASST, 
-    session['DB_CODE']
+    #insert baseline interaction
+    db.insert_interaction(
+        session['SESSION_NAME'], 
+        'user',
+        prm.SUMMARY_CTXT_USR
     )
-    conn.close()    
+    db.insert_interaction(
+        session['SESSION_NAME'], 
+        'assistant',
+        prm.SUMMARY_TXT_ASST
+    )
+    db.close_connection()
 
     return render_template('index.html')
 
 
+# TBC => implement dbhandler from here ###################
+# still buggy...
 @app.route('/ask', methods=['POST'])
 def ask():
     """handle POST request from the form and return the response"""
@@ -157,14 +166,18 @@ def ask():
 
 
     # Handle chat memory and context
-    conn = dbh.create_connection(session['DB_PTH'])
-    recal_table = dbh.fetch_recall_table(session['DB_CODE'], conn)
-    conn.close() 
-    ## Chop recall table to only include contexts for sources, user, or assistant
-    recal_table_source = recal_table[recal_table['interaction_type'] == 'source']
-    recal_table_user = recal_table[recal_table['interaction_type'] == 'user']
-    recal_table_assistant = recal_table[recal_table['interaction_type'] == 'assistant']
+    print('Handling chat memory and context...')
+    db.create_connection(prm.DB_PATH)
+    # Get the context table
+    recall_table = db.load_context(session['SESSION_NAME'])
+    db.close_connection()
 
+    ## Chop recall table to only include contexts for sources, user, or assistant
+    recal_table_source = recall_table[recall_table['interaction_type'] == 'source']
+    recal_table_user = recall_table[recall_table['interaction_type'] == 'user']
+    recal_table_assistant = recall_table[recall_table['interaction_type'] == 'assistant']
+
+    # TODO: make a function in cproc out of that!!!
     recal_embed_source = cproc.convert_table_to_dct(recal_table_source)
     recal_embed_user = cproc.convert_table_to_dct(recal_table_user)
     recal_embed_assistant = cproc.convert_table_to_dct(recal_table_assistant)
@@ -183,49 +196,50 @@ def ask():
         # If recal source id is a list, join the text from the list
         if len(recal_source_id)>1:
             idxs = [x[1] for x in recal_source_id]
-            recal_source = recal_table.loc[idxs]['text'].to_list()
+            recal_source = recall_table.loc[idxs]['text'].to_list()
             recal_source = '| '.join(recal_source)
         else: 
-            recal_source = recal_table.loc[recal_source_id[1]]['text']
+            recal_source = recall_table.loc[recal_source_id[1]]['text']
+
     ## GET QRY context
     if len(recal_embed_user) == 0:
         recal_user = 'No context found'
     else:
         recal_user_id = oai.order_document_sections_by_query_similarity(question, recal_embed_user)[0][1]
-        recal_user = recal_table.loc[recal_user_id]['text']
+        recal_user = recall_table.loc[recal_user_id]['text']
+
     ## GET RPL context
     if len(recal_embed_assistant) == 0:
         recal_assistant = 'No context found'
     else:
         recal_assistant_id = oai.order_document_sections_by_query_similarity(question, recal_embed_assistant)[0][1]
-        recal_assistant = recal_table.loc[recal_assistant_id]['text']
+        recal_assistant = recall_table.loc[recal_assistant_id]['text']
 
 
-    # Look for assistant and user messages in the interaction table that have the latest time_signature
-    last_usr_max = recal_table_user['time_signature'].astype(int).max()
-    last_asst_max = recal_table_assistant['time_signature'].astype(int).max()
+    # Look for assistant and user messages in the interaction table that have the latest timestamp
+    last_usr_max = recal_table_user['timestamp'].astype(int).max()
+    last_asst_max = recal_table_assistant['timestamp'].astype(int).max()
     if last_usr_max == 0:
         latest_user = 'No context found'
     else:
-        latest_user = recal_table_user.loc[recal_table_user['time_signature']==str(last_usr_max)]['text'].values[0]
+        latest_user = recal_table_user.loc[recal_table_user['timestamp']==str(last_usr_max)]['text'].values[0]
 
     if last_asst_max == 0:
         latest_assistant = 'No context found'
     else:
-        latest_assistant = recal_table_assistant.loc[recal_table_assistant['time_signature']==str(last_asst_max)]['text'].values[0]
+        latest_assistant = recal_table_assistant.loc[recal_table_assistant['timestamp']==str(last_asst_max)]['text'].values[0]
+
+    print('Done handling chat memory and context.')
     
     ## Grab chapter name if it exists, otherwise use session name
     ## It will become handy when user wants to know from which chapter the context was taken
     if len(idxs)>1:
-        recal_source_pages = recal_table.loc[idxs]['page'].to_list()
+        recal_source_pages = recall_table.loc[idxs]['page'].to_list()
     else:
-        recal_source_pages = recal_table.loc[recal_source_id[1]]['page']
+        recal_source_pages = recall_table.loc[recal_source_id[1]]['page']
 
     print(f'I will answer your question basing on the following context: {set(recal_source_pages)}')
 
-    # initialize classes
-    chatbot = Chatbot()
-    print("!Chatbot initialized")
 
     message = chatbot.build_prompt(
         latest_user,
@@ -253,27 +267,24 @@ def ask():
 
     # Open DB so the assistant can remember the conversation
     session['SPOT_TIME'] = str(int(time.time()))
-    conn = dbh.create_connection(session['DB_PTH'])
+    db.create_connection()
     # Insert user message into DB so we can use it for another user's input
-    dbh.insert_interaction(
-        conn, 
-        session['DB_CODE'], 
-        'user', 
+    db.insert_interaction(
+        session['SESSION_NAME'], 
+        'user',
         question,
-        session['SPOT_TIME']
-        )
-    # Insert model's response into DB so we can use it for another user's input
-    dbh.insert_interaction(
-        conn,
-        session['DB_CODE'],
+        timestamp=session['SPOT_TIME']
+    )
+    db.insert_interaction(
+        session['SESSION_NAME'], 
         'assistant',
         response['choices'][0]['message']['content'],
-        response['created']
-        )
-    conn.close()
-
+        timestamp=response['created']
+    )
+    db.close_connection()
 
     return jsonify({'response': response})
+
 
 
 @app.route('/export_interactions', methods=['GET'])
@@ -288,7 +299,7 @@ def export_interactions():
     conn.close()
     # remove records that are user or assistant interaction type and have time signature 0 - these were injected into the table as a seed to improve performance of the model at the beginning of the conversation
     seed_f = (
-        (recall_df['interaction_type'].isin(['user','assistant'])) & (recall_df['time_signature'] == '0')
+        (recall_df['interaction_type'].isin(['user','assistant'])) & (recall_df['timestamp'] == '0')
         )
     recall_df = recall_df[~seed_f]
 

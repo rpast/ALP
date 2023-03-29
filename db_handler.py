@@ -202,12 +202,13 @@ class DatabaseHandler:
         :return: recal table pd.DataFrame
         """
         # Define the query to fetch the context table for the given session_name
-        select_context = f"SELECT * FROM context_{session_name}"
+        select_context = f"SELECT * FROM context WHERE session_name = '{session_name}"
         
-        # Define the query to check if interaction table for given session_name exists in the database
-        check_interaction = f"SELECT name FROM sqlite_master WHERE type='table' AND name='interaction_{session_name}'"
-
         # Fetch context table for given session_name
+        # use query_db function to fetch the data
+
+        context_df = db.query_db(select_context)
+         
         context_df = pd.read_sql_query(select_context, self.conn)
         
         # Check if interaction table for given session_name exists in the database
