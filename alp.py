@@ -156,8 +156,7 @@ def index():
     return render_template('index.html')
 
 
-# TBC => implement dbhandler from here ###################
-# still buggy...
+
 @app.route('/ask', methods=['POST'])
 def ask():
     """handle POST request from the form and return the response"""
@@ -222,12 +221,12 @@ def ask():
     if last_usr_max == 0:
         latest_user = 'No context found'
     else:
-        latest_user = recal_table_user.loc[recal_table_user['timestamp']==str(last_usr_max)]['text'].values[0]
+        latest_user = recal_table_user[recal_table_user['timestamp']==last_usr_max]['text']
 
     if last_asst_max == 0:
         latest_assistant = 'No context found'
     else:
-        latest_assistant = recal_table_assistant.loc[recal_table_assistant['timestamp']==str(last_asst_max)]['text'].values[0]
+        latest_assistant = recal_table_assistant[recal_table_assistant['timestamp']==last_asst_max]['text']
 
     print('Done handling chat memory and context.')
     
@@ -286,20 +285,22 @@ def ask():
     return jsonify({'response': response})
 
 
-
+# TBC => implement dbhandler from here ###################
 @app.route('/export_interactions', methods=['GET'])
 def export_interactions():
     """Export the interaction table as a JSON file for download.
     """
 
     # Connect to the database
-    conn = dbh.create_connection(session['DB_PTH'])
+    db.create_connection()
     # Retrieve the interaction table
-    recall_df = dbh.fetch_recall_table(session['DB_CODE'], conn)
-    conn.close()
-    # remove records that are user or assistant interaction type and have time signature 0 - these were injected into the table as a seed to improve performance of the model at the beginning of the conversation
+    recall_df = db.load_context(session['SESSION_NAME'])
+    db.close_connection()
+    # remove records that are user or assistant interaction type and have 
+    # time signature 0 - these were injected into the table as a seed to 
+    # improve performance of the model at the beginning of the conversation
     seed_f = (
-        (recall_df['interaction_type'].isin(['user','assistant'])) & (recall_df['timestamp'] == '0')
+        (recall_df['interaction_type'].isin(['user','assistant'])) & (recall_df['timestamp'] == 0)
         )
     recall_df = recall_df[~seed_f]
 
@@ -315,7 +316,7 @@ def export_interactions():
     return send_file(
         json_buffer, 
         as_attachment=True, 
-        download_name=f"interactions_{session['DB_CODE']}.json", 
+        download_name=f"interactions_{session['SESSION_NAME']}.json", 
         mimetype='application/json')
 
 
