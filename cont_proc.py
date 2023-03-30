@@ -21,8 +21,6 @@ def process_name(name):
         name = name.split('.pdf')[0]
 
     name = name.strip()
-    # use regex to replace all whitespaces with underscore
-    name = re.sub(r'\s+', '_', name)
     # exclude all signs that conflict with SQLite
     name = re.sub(r'[^\w]', '', name)
     name = name.lower()

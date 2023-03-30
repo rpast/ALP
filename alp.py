@@ -53,7 +53,13 @@ print("!Chatbot initialized")
 # Render welcome page
 @app.route('/')
 def welcome():
-    return render_template('welcome.html')
+    db.create_connection()
+    session_names = [x[0] for x in db.load_session_names()]
+    db.close_connection()
+
+    print("Available session names: ", session_names)
+
+    return render_template('welcome.html', session_names=session_names)
 
 @app.route('/set_session_details', methods=['POST'])
 def set_session_details():
@@ -65,12 +71,9 @@ def set_session_details():
         openai.api_key = f.read()
     # openai.api_key = request.form['api_key']
 
-    session_name = request.form['session_name']
-    file = request.files['pdf']
-
-    # make sure names are correctly formatted
-    session_name = cproc.process_name(session_name)
-    file_name = cproc.process_name(file.filename)
+    session_name = cproc.process_name(request.form['session_name'])
+    file_ = request.files['pdf']
+    file_name = cproc.process_name(file_.filename)
 
     # Pre-process uploaded source file, create the session db and save
     session['SESSION_TIME'] = str(int(time.time()))
@@ -80,7 +83,7 @@ def set_session_details():
     # Save the file to the upload folder
     saved_fname = session['SESSION_NAME'] + '_' + file_name
     fpath = os.path.join(prm.UPLOAD_FOLDER, saved_fname)
-    file.save(fpath)
+    file_.save(fpath)
 
     # Load the pdf process the text
     loader = PyPDFLoader(fpath)
@@ -172,19 +175,19 @@ def ask():
     db.close_connection()
 
     ## Chop recall table to only include contexts for sources, user, or assistant
-    recal_table_source = recall_table[recall_table['interaction_type'] == 'source']
-    recal_table_user = recall_table[recall_table['interaction_type'] == 'user']
-    recal_table_assistant = recall_table[recall_table['interaction_type'] == 'assistant']
+    recall_table_source = recall_table[recall_table['interaction_type'] == 'source']
+    recall_table_user = recall_table[recall_table['interaction_type'] == 'user']
+    recall_table_assistant = recall_table[recall_table['interaction_type'] == 'assistant']
 
     # TODO: make a function in cproc out of that!!!
-    recal_embed_source = cproc.convert_table_to_dct(recal_table_source)
-    recal_embed_user = cproc.convert_table_to_dct(recal_table_user)
-    recal_embed_assistant = cproc.convert_table_to_dct(recal_table_assistant)
+    recal_embed_source = cproc.convert_table_to_dct(recall_table_source)
+    recal_embed_user = cproc.convert_table_to_dct(recall_table_user)
+    recal_embed_assistant = cproc.convert_table_to_dct(recall_table_assistant)
 
     ## Get the context from recall table that is the most similar to user input
     num_samples = prm.NUM_SAMPLES
-    if recal_table_source.shape[0] < prm.NUM_SAMPLES:
-        num_samples = recal_table_source.shape[0]
+    if recall_table_source.shape[0] < prm.NUM_SAMPLES:
+        num_samples = recall_table_source.shape[0]
         print('Source material is shorter than number of samples you want to get. Setting number of samples to the number of source material sections.')
 
     ## Get SRC context
@@ -216,17 +219,17 @@ def ask():
 
 
     # Look for assistant and user messages in the interaction table that have the latest timestamp
-    last_usr_max = recal_table_user['timestamp'].astype(int).max()
-    last_asst_max = recal_table_assistant['timestamp'].astype(int).max()
+    last_usr_max = recall_table_user['timestamp'].astype(int).max()
+    last_asst_max = recall_table_assistant['timestamp'].astype(int).max()
     if last_usr_max == 0:
         latest_user = 'No context found'
     else:
-        latest_user = recal_table_user[recal_table_user['timestamp']==last_usr_max]['text']
+        latest_user = recall_table_user[recall_table_user['timestamp']==last_usr_max]['text']
 
     if last_asst_max == 0:
         latest_assistant = 'No context found'
     else:
-        latest_assistant = recal_table_assistant[recal_table_assistant['timestamp']==last_asst_max]['text']
+        latest_assistant = recall_table_assistant[recall_table_assistant['timestamp']==last_asst_max]['text']
 
     print('Done handling chat memory and context.')
     
@@ -327,7 +330,7 @@ def open_browser():
 
 if __name__ == '__main__':
     # Run DEV server
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)
 
     #run PROD server
     # Timer(1, open_browser).start()
