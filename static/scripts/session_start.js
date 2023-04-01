@@ -1,44 +1,31 @@
-// document.addEventListener("DOMContentLoaded", function() {
-//     const sessionNameInput = document.getElementById("session_name");
+document.addEventListener("DOMContentLoaded", function () {
 
-//     if (sessionNameInput) {
-//         sessionNameInput.addEventListener("change", function() {
-//             const enteredSessionName = this.value;
-//             if (sessionNames.includes(enteredSessionName)) {
-//                 alert("The session name is already taken. Please choose a different one.");
-//                 this.value = "";
-//             }
-//         });
-//     }
-// });
+    const sessionNameInput = document.getElementById("new_session_name");
+    var existingSession = document.getElementById("existing_session");
+    var newSessionName = document.getElementById("new_session_name");
+    var fileInput = document.querySelector('input[type="file"]');
 
-var existingSession = document.getElementById("existing_session");
-var newSessionName = document.getElementById("new_session_name");
-var fileInput = document.querySelector('input[type="file"]');
-var sessionNames = JSON.parse(newSessionName.dataset.sessionNames);
+    console.log("sessionNames:", sessionNames);
 
-existingSession.addEventListener("change", function() {
-    if (this.value !== "") {
-        newSessionName.disabled = true;
-        fileInput.disabled = true;
-    } else {
-        newSessionName.disabled = false;
-        fileInput.disabled = false;
-    }
-});
-
-
-document.addEventListener("DOMContentLoaded", function() {
-    const sessionNameInput = document.getElementById("session_name");
+    existingSession.addEventListener("change", function () {
+        console.log("existingSession change");
+        if (this.value !== "") {
+            newSessionName.disabled = true;
+            fileInput.disabled = true;
+        } else {
+            newSessionName.disabled = false;
+            fileInput.disabled = false;
+        }
+    });
 
     if (sessionNameInput) {
-        sessionNameInput.addEventListener("change", function() {
+        sessionNameInput.addEventListener("change", function () {
+            console.log("sessionNameInput change");
             const enteredSessionName = this.value;
             if (sessionNames.includes(enteredSessionName)) {
-                alert("The session name is already taken. Please choose a different one.");
-                this.value = "";
+            alert("The session name is already taken. Please choose a different one.");
+            this.value = "";
             }
         });
     }
 });
-

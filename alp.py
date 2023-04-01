@@ -71,46 +71,65 @@ def set_session_details():
         openai.api_key = f.read()
     # openai.api_key = request.form['api_key']
 
-    session_name = cproc.process_name(request.form['session_name'])
-    file_ = request.files['pdf']
-    file_name = cproc.process_name(file_.filename)
+    # Grab session names from the form
+    new_session_name = request.form.get('new_session_name',0)
+    existing_session_name = request.form.get('existing_session',0)
 
-    # Pre-process uploaded source file, create the session db and save
+    # Determine if we deal with new or existing session
+    if new_session_name != 0:
+        session['NEW_SESSION'] = True
+        session_name = new_session_name
+    elif existing_session_name != 0:
+        session['NEW_SESSION'] = False
+        session_name = existing_session_name
+    
+    session_name = cproc.process_name(session_name)
+
     session['SESSION_TIME'] = str(int(time.time()))
     session['SESSION_DATE'] = datetime.datetime.fromtimestamp(time.time())
     session['SESSION_NAME'] = session_name
 
-    # Save the file to the upload folder
-    saved_fname = session['SESSION_NAME'] + '_' + file_name
-    fpath = os.path.join(prm.UPLOAD_FOLDER, saved_fname)
-    file_.save(fpath)
 
-    # Load the pdf process the text
-    loader = PyPDFLoader(fpath)
-    pages = loader.load_and_split()
-    pages_df = cproc.pages_to_dataframe(pages)
-    pages_refined_df = cproc.split_pages(pages_df, session['SESSION_NAME'])
+    if session['NEW_SESSION']:
+        # Logic for new session. Create the session db, populate with the context 
+        # and start the embedding process
+        file_ = request.files['pdf']
+        file_name = cproc.process_name(file_.filename)
+
+        # Save the file to the upload folder
+        saved_fname = session['SESSION_NAME'] + '_' + file_name
+        fpath = os.path.join(prm.UPLOAD_FOLDER, saved_fname)
+        file_.save(fpath)
+
+        # Load the pdf process the text
+        loader = PyPDFLoader(fpath)
+        pages = loader.load_and_split()
+        pages_df = cproc.pages_to_dataframe(pages)
+        pages_refined_df = cproc.split_pages(pages_df, session['SESSION_NAME'])
+        
+        # Populate session and interim context table
+        db.create_connection(prm.DB_PATH)
+        db.insert_session(session['SESSION_NAME'], session['SESSION_DATE'])
+        db.insert_context(pages_refined_df, table_name='interim_context', if_exist='replace')
+        db.close_connection()
+
+        # Get the embedding cost
+        embedding_cost = round(cproc.embed_cost(pages_refined_df),4)
+        # express embedding cost in dollars
+        embedding_cost = f"${embedding_cost}"
+        doc_length = pages_refined_df.shape[0]
+        length_warning = doc_length / 60 > 1
+
+        return render_template(
+            'summary.html', 
+            session_name=session_name, 
+            embedding_cost=embedding_cost,
+            doc_length=doc_length,
+            length_warning=length_warning
+            )
     
-    # Populate session and interim context table
-    db.create_connection(prm.DB_PATH)
-    db.insert_session(session['SESSION_NAME'], session['SESSION_DATE'])
-    db.insert_context(pages_refined_df, table_name='interim_context', if_exist='replace')
-    db.close_connection()
-
-    # Get the embedding cost
-    embedding_cost = round(cproc.embed_cost(pages_refined_df),4)
-    # express embedding cost in dollars
-    embedding_cost = f"${embedding_cost}"
-    doc_length = pages_refined_df.shape[0]
-    length_warning = doc_length / 60 > 1
-
-    return render_template(
-        'summary.html', 
-        session_name=session_name, 
-        embedding_cost=embedding_cost,
-        doc_length=doc_length,
-        length_warning=length_warning
-        )
+    else:
+        return redirect(url_for('index'))
 
 
 @app.route('/start_embedding', methods=['POST'])

@@ -72,40 +72,20 @@
                 </div>
                 <div class="form-group">
                     <label for="new_session_name">Or set a new one:</label>
-                    <input type="text" id="new_session_name" name="new_session_name" data-session-names="{{ session_names|tojson|safe }}">
+                    <input type="text" id="new_session_name" name="new_session_name">
                 </div>
                 <div class="form-group">
                     <input type="file" name="pdf" accept=".pdf" required>
                 </div>
                 <button type="submit">Start session</button>
-            </form>
+            </form>sessionNameInput
         </div>
     </div>
-    <script src='../static/scripts/session_start.js'></script>
     <script>
-        // var sessionNames = {{ session_names|tojson|safe }};
-        // var existingSession = document.getElementById("existing_session");
-        // var newSessionName = document.getElementById("new_session_name");
-        // var fileInput = document.querySelector('input[type="file"]');
-    
-        // existingSession.addEventListener("change", function() {
-        //     if (this.value !== "") {
-        //         newSessionName.disabled = true;
-        //         fileInput.disabled = true;
-        //     } else {
-        //         newSessionName.disabled = false;
-        //         fileInput.disabled = false;
-        //     }
-        // });
-    
-        // newSessionName.addEventListener("change", function() {
-        //     if (sessionNames.includes(this.value)) {
-        //         alert("The session name is already taken. Please choose a different one.");
-        //         this.value = "";
-        //     }
-        // });
+        var sessionNames = {{ session_names|tojson|safe }};
+        console.log("session_names from backend:", {{ session_names|tojson|safe }});
     </script>
-
+    <script src='../static/scripts/session_start.js'></script>
 </body>
 </html>
 
