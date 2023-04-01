@@ -135,7 +135,14 @@ class DatabaseHandler:
             return False
         
 
-    def insert_interaction(self, session_name, inter_type, message, page=None, edges=None, timestamp=0) -> bool:
+    def insert_interaction(
+            self, 
+            session_name, 
+            inter_type, 
+            message, 
+            page=None, 
+            edges=None, 
+            timestamp=None) -> bool:
         """Insert interaction data into the database's Interaction table.
         :param session_name: session name
         :param inter_type: interaction type
@@ -185,8 +192,38 @@ class DatabaseHandler:
             # get column names
             colnames = [desc[0] for desc in c.description]
             context_df = pd.DataFrame(data, columns=colnames)
+            context_df['timestamp'] = pd.to_numeric(context_df['timestamp'])
 
             return context_df
+        
+        except Exception as e:
+            print(e)
+
+            return None
+        
+
+    def load_chat_history(self, session) -> pd.DataFrame:
+        """Load chat history from the database to a dataframe
+        :param session: session name
+        :return:
+        """
+        try:
+            c = self.conn.cursor()
+            c.execute(f"""
+                SELECT text, timestamp, interaction_type 
+                FROM context 
+                WHERE 
+                    SESSION_NAME = ? AND 
+                    TIMESTAMP IS NOT NULL AND
+                    INTERACTION_TYPE IN ('user', 'assistant')
+                """, (session,))
+            data = c.fetchall()
+            # get column names
+            colnames = [desc[0] for desc in c.description]
+            chat_history_df = pd.DataFrame(data, columns=colnames)
+            chat_history_df['timestamp'] = pd.to_numeric(chat_history_df['timestamp'])
+
+            return chat_history_df
         
         except Exception as e:
             print(e)

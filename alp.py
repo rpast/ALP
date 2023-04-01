@@ -89,6 +89,7 @@ def set_session_details():
     session['SESSION_DATE'] = datetime.datetime.fromtimestamp(time.time())
     session['SESSION_NAME'] = session_name
 
+    
 
     if session['NEW_SESSION']:
         # Logic for new session. Create the session db, populate with the context 
@@ -129,7 +130,8 @@ def set_session_details():
             )
     
     else:
-        return redirect(url_for('index'))
+        return redirect(
+            url_for('index'))
 
 
 @app.route('/start_embedding', methods=['POST'])
@@ -160,22 +162,37 @@ def start_embedding():
 def index():
     """render interaction main page"""
 
+    # Load chat history
     db.create_connection(prm.DB_PATH)
-
-    #insert baseline interaction
-    db.insert_interaction(
-        session['SESSION_NAME'], 
-        'user',
-        prm.SUMMARY_CTXT_USR
-    )
-    db.insert_interaction(
-        session['SESSION_NAME'], 
-        'assistant',
-        prm.SUMMARY_TXT_ASST
-    )
+    chat_history = db.load_chat_history(session['SESSION_NAME'])
     db.close_connection()
 
-    return render_template('index.html')
+    # Convert the DataFrame to a JSON object
+    chat_history_json = chat_history.to_dict(orient='records')
+
+    if chat_history.empty:
+        # If chat history is empty it means this is the first interaction
+        # we need to insert the baseline exchange   
+        db.create_connection(prm.DB_PATH)
+        
+        #insert baseline interaction
+        db.insert_interaction(
+            session['SESSION_NAME'], 
+            'user',
+            prm.SUMMARY_CTXT_USR
+        )
+        db.insert_interaction(
+            session['SESSION_NAME'], 
+            'assistant',
+            prm.SUMMARY_TXT_ASST
+        )
+        db.close_connection()
+
+    return render_template(
+        'index.html',
+        session_name=session['SESSION_NAME'],
+        chat_history=chat_history_json
+        )
 
 
 
@@ -194,9 +211,14 @@ def ask():
     db.close_connection()
 
     ## Chop recall table to only include contexts for sources, user, or assistant
-    recall_table_source = recall_table[recall_table['interaction_type'] == 'source']
-    recall_table_user = recall_table[recall_table['interaction_type'] == 'user']
-    recall_table_assistant = recall_table[recall_table['interaction_type'] == 'assistant']
+    src_f = (recall_table['interaction_type'] == 'source') & (~recall_table['timestamp'].isnull())
+    usr_f = (recall_table['interaction_type'] == 'user') & (~recall_table['timestamp'].isnull())
+    ast_f = (recall_table['interaction_type'] == 'assistant') & (~recall_table['timestamp'].isnull())
+    
+    recall_table_source = recall_table[src_f]
+    recall_table_user = recall_table[usr_f]
+    print(recall_table.dtypes)
+    recall_table_assistant = recall_table[ast_f]
 
     # TODO: make a function in cproc out of that!!!
     recal_embed_source = cproc.convert_table_to_dct(recall_table_source)

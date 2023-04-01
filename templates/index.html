@@ -33,6 +33,28 @@
         </div>
     </div>
     <script src="../static/scripts/chat.js"></script>
+    <script>
+        function renderChatHistory(chatHistory) {
+            const responseDiv = document.getElementById("response");
+            
+            chatHistory.forEach((interaction) => {
+                const role = interaction.interaction_type === "user" ? "User" : "Agent";
+                responseDiv.innerHTML += `<p><strong>${role}:</strong> ${interaction.text}</p>`;
+            });
+        
+            // If chat history is empty, display the agent's message
+            if (chatHistory.length === 0) {
+                responseDiv.innerHTML += '<p><strong>Agent:</strong> Hi! What can I do for you?</p>';
+            }
+            }
 
+        let chatHistory = {{ chat_history|tojson|safe }};
+        let sessionName = {{ session_name|tojson|safe }};
+        console.log(chatHistory);
+        console.log(sessionName);
+
+        // Call the function to render chat history
+        renderChatHistory(chatHistory);
+    </script>
 </body>
 </html>
