@@ -211,13 +211,12 @@ def ask():
     db.close_connection()
 
     ## Chop recall table to only include contexts for sources, user, or assistant
-    src_f = (recall_table['interaction_type'] == 'source') & (~recall_table['timestamp'].isnull())
-    usr_f = (recall_table['interaction_type'] == 'user') & (~recall_table['timestamp'].isnull())
-    ast_f = (recall_table['interaction_type'] == 'assistant') & (~recall_table['timestamp'].isnull())
+    src_f = (recall_table['interaction_type'] == 'source')
+    usr_f = (recall_table['interaction_type'] == 'user') & (recall_table['timestamp']!=0)
+    ast_f = (recall_table['interaction_type'] == 'assistant') & (recall_table['timestamp']!=0)
     
     recall_table_source = recall_table[src_f]
     recall_table_user = recall_table[usr_f]
-    print(recall_table.dtypes)
     recall_table_assistant = recall_table[ast_f]
 
     # TODO: make a function in cproc out of that!!!
@@ -229,11 +228,13 @@ def ask():
     num_samples = prm.NUM_SAMPLES
     if recall_table_source.shape[0] < prm.NUM_SAMPLES:
         num_samples = recall_table_source.shape[0]
-        print('Source material is shorter than number of samples you want to get. Setting number of samples to the number of source material sections.')
+        print('WARNING! Source material is shorter than number of samples you want to get. Setting number of samples to the number of source material sections.')
 
     ## Get SRC context
     if len(recal_embed_source) == 0:
         recal_source = 'No context found'
+        print('WARNING! No source material found.')
+        idxs=[]
     else:
         recal_source_id = oai.order_document_sections_by_query_similarity(question, recal_embed_source)[0:num_samples]
         # If recal source id is a list, join the text from the list
@@ -242,7 +243,8 @@ def ask():
             recal_source = recall_table.loc[idxs]['text'].to_list()
             recal_source = '| '.join(recal_source)
         else: 
-            recal_source = recall_table.loc[recal_source_id[1]]['text']
+            idxs = recal_source_id[1]
+            recal_source = recall_table.loc[idxs]['text']
 
     ## GET QRY context
     if len(recal_embed_user) == 0:
@@ -276,10 +278,13 @@ def ask():
     
     ## Grab chapter name if it exists, otherwise use session name
     ## It will become handy when user wants to know from which chapter the context was taken
+
     if len(idxs)>1:
         recal_source_pages = recall_table.loc[idxs]['page'].to_list()
+    elif len(idxs)==1:
+        recal_source_pages = recall_table.loc[idxs]['page']
     else:
-        recal_source_pages = recall_table.loc[recal_source_id[1]]['page']
+        recal_source_pages = 'No context found'
 
     print(f'I will answer your question basing on the following context: {set(recal_source_pages)}')
 

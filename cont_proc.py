@@ -118,8 +118,8 @@ def split_pages(pages_df, session_name):
         .rename(columns={'index': 'page', 'num_tokens_oai': 'text_token_no'}) # Rename index column to chapter
         .assign(session_name=session_name) # Add session_name column
         .assign(interaction_type='source') ## Add interaction type column
-        .assign(timestamp=None) # Add timestamp column
-        [['session_name', 'interaction_type', 'text', 'text_token_no', 'page']]
+        .assign(timestamp=0) # Add timestamp column
+        [['session_name', 'interaction_type', 'text', 'text_token_no', 'page', 'timestamp']]
         )
 
     return pages_contents_long_df

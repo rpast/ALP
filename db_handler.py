@@ -142,7 +142,7 @@ class DatabaseHandler:
             message, 
             page=None, 
             edges=None, 
-            timestamp=None) -> bool:
+            timestamp=0) -> bool:
         """Insert interaction data into the database's Interaction table.
         :param session_name: session name
         :param inter_type: interaction type
@@ -190,12 +190,12 @@ class DatabaseHandler:
             c.execute(f"SELECT * FROM {table_name} WHERE SESSION_NAME = '{session_name}'")
             data = c.fetchall()
             # get column names
+            print([desc[0] for desc in c.description])
             colnames = [desc[0] for desc in c.description]
             context_df = pd.DataFrame(data, columns=colnames)
             context_df['timestamp'] = pd.to_numeric(context_df['timestamp'])
-
             return context_df
-        
+
         except Exception as e:
             print(e)
 
@@ -209,17 +209,18 @@ class DatabaseHandler:
         """
         try:
             c = self.conn.cursor()
-            c.execute(f"""
-                SELECT text, timestamp, interaction_type 
-                FROM context 
-                WHERE 
-                    SESSION_NAME = ? AND 
-                    TIMESTAMP IS NOT NULL AND
+            # c.execute(f"SELECT * FROM context")
+            c.execute(f"""SELECT text, timestamp, interaction_type
+                FROM context
+                WHERE
+                    SESSION_NAME = ? AND
+                    TIMESTAMP != 0 AND
                     INTERACTION_TYPE IN ('user', 'assistant')
                 """, (session,))
-            data = c.fetchall()
-            # get column names
+            print([desc[0] for desc in c.description])
             colnames = [desc[0] for desc in c.description]
+            data = c.fetchall()
+            # # get column names
             chat_history_df = pd.DataFrame(data, columns=colnames)
             chat_history_df['timestamp'] = pd.to_numeric(chat_history_df['timestamp'])
 
