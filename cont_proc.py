@@ -22,7 +22,7 @@ def process_name(name):
 
     name = name.strip()
     # exclude all signs that conflict with SQLite
-    name = re.sub(r'[^\w]', '', name)
+    name = re.sub(r'[^\w]', '_', name)
     name = name.lower()
 
     # truncate if needed

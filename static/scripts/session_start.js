@@ -7,6 +7,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     console.log("sessionNames:", sessionNames);
 
+    // Process the session name to make it compatible with SQLite
+    function processSessionName(name) {
+        name = name.trim();
+        // Exclude all signs that conflict with SQLite
+        name = name.replace(/[^\w]/g, '_');
+        name = name.toLowerCase();
+    
+        return name;
+    }
+
     existingSession.addEventListener("change", function () {
         console.log("existingSession change");
         if (this.value !== "") {
@@ -21,9 +31,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (sessionNameInput) {
         sessionNameInput.addEventListener("change", function () {
             console.log("sessionNameInput change");
-            const enteredSessionName = this.value;
+            const enteredSessionName = processSessionName(this.value);;
             if (sessionNames.includes(enteredSessionName)) {
-            alert("The session name is already taken. Please choose a different one.");
+            alert("The session name is already taken. Please choose a different one. Note that program turns all special characters into '_'");
             this.value = "";
             }
         });
