@@ -67,9 +67,7 @@ def set_session_details():
 
     ## Get the data from the form
     # Pass API key right to the openai object
-    with open(os.path.join(static_folder, 'data/apikey.txt'), 'r') as f:
-        openai.api_key = f.read()
-    # openai.api_key = request.form['api_key']
+    openai.api_key = request.form['api_key']
 
     # Grab session names from the form
     new_session_name = request.form.get('new_session_name',0)
