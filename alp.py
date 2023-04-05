@@ -374,8 +374,8 @@ def open_browser():
 
 if __name__ == '__main__':
     # Run DEV server
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    # app.run(debug=True, host='0.0.0.0', port=5001)
 
-    #run PROD server
-    # Timer(1, open_browser).start()
-    # serve(app, host='0.0.0.0', port=5000)
+    # run PROD server
+    Timer(1, open_browser).start()
+    serve(app, host='0.0.0.0', port=5000)

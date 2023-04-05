@@ -2,6 +2,9 @@
 
 ALP is an open-source, knowledge-grounded conversational AI system designed to generate responses grounded in relevant knowledge from external sources.
 ALP is currently in development, but it can be used locally on users' machines. Built with simplicity in mind, ALP reads chosen PDF file, has unlimited conversational memory and the ability to export conversation and source embeddings in JSON format.
+ALP stores conversation history and embeddings in local SQLite database. Thanks to that document upload and embedding process happens only once. In future releases user will get more functionalities to manage conversation history. 
+
+ALP is intended to be run locally on users machines. All is needed is Python and few commands in your command line. Feel free to fork, explore the code, hack it and adjust to your needs. 
 
 ## Table of Contents
 
@@ -25,10 +28,12 @@ Currently ALP utilizes following models:
 ## Features
 - **Conversational research assistant**: Interact with and get information from loaded PDF files.
 - **Unlimited conversational memory**: Retain information from previous conversations for context-aware responses.
+- **User can come back to past conversations**: Pick up your convo right where you left. 
 - **Support for long documents**: You can upload books. The only thing that limits you is your API limit.
 - **JSON export**: Export conversation and source embeddings as JSON format.
 - **Retrieval augmentation**: Utilize retrieval augmentation techniques for improved accuracy. Read more [here](https://arxiv.org/pdf/2104.07567.pdf).
-- **Local deployment**: Spin up ALP locally on your machine for privacy and convenience.
+- **Local deployment**: Spin up ALP locally on your machine for privacy, convenience and hackability. 
+- **Open source**: The code is yours to read, test and break. 
 
 ## Installation
 To set up ALP on your local machine, follow these steps:
@@ -81,6 +86,7 @@ The app should open in your default web browser. If it doesn't, navigate to http
 
 7. **Start using ALP:**
 
+
 Provide a session name, API key, and select PDF for upload to start interacting with the conversational research assistant.
 
 ## Demo
@@ -88,7 +94,9 @@ Provide a session name, API key, and select PDF for upload to start interacting 
 
 
 ## Todo
-1. [ ] Allow user to continue conversations on another sessions. << sessiong_mgt branch
+1. [x] Allow user to continue conversations on another sessions.
+   1. [ ] User can clean-up the conversation leaving only embeddings in the conversation hisory.
+   2. [ ] User can delete unwanted converastions from database.
 2. [ ] Display sources used by the agent for the answer.
 3. [ ] Allow user to upload more than one document
 4. [ ] User is able to upload text from other sources 
