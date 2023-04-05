@@ -1,10 +1,12 @@
 # ALP
 
-ALP is an open-source, knowledge-grounded conversational AI system designed to generate responses grounded in relevant knowledge from external sources.
-ALP is currently in development, but it can be used locally on users' machines. Built with simplicity in mind, ALP reads chosen PDF file, has unlimited conversational memory and the ability to export conversation and source embeddings in JSON format.
-ALP stores conversation history and embeddings in local SQLite database. Thanks to that document upload and embedding process happens only once. In future releases user will get more functionalities to manage conversation history. 
+ALP is an open-source, knowledge-grounded conversational AI system designed to generate responses grounded in relevant knowledge from external sources. 📖
 
-ALP is intended to be run locally on users machines. All is needed is Python and few commands in your command line. Feel free to fork, explore the code, hack it and adjust to your needs. 
+ALP is currently in development, but it can be used locally on users' machines. Built with simplicity in mind, ALP reads chosen PDF file, has unlimited conversational memory and the ability to export conversation and source embeddings in JSON format.
+
+ALP stores conversation history and embeddings in local SQLite database 🗄️. Thanks to that document upload and embedding process happens only once. In future releases user will get more functionalities to manage conversation history. 
+
+ALP is intended to be run locally on users machines 💻. All is needed is Python and few commands in your command line. Feel free to fork, explore the code, hack it and adjust to your needs 🔧. 
 
 ## Table of Contents
 
@@ -86,8 +88,13 @@ The app should open in your default web browser. If it doesn't, navigate to http
 
 7. **Start using ALP:**
 
+Welcome page is the one where you 1) either set your session name and upload pdf file 2) or choose a session name from the ones available in drop-down menu. 
+For both cases in order for ALP to work you have to pass Open AI API key. Since this is a local environment you are safe to do so. You can also inspect the code to see that nothing fishy is happening with your key.
 
-Provide a session name, API key, and select PDF for upload to start interacting with the conversational research assistant.
+To get API key you have to create an account on https://platform.openai.com 🌐. As a new user you will get a few bucks to test API capabilities. This should be enough for a couple of hundred regular exchanges with ALP.
+
+<img src="https://github.com/rpast/ALP/blob/master/static/alp_welcome.png?raw=true" width="600px" height="500px"></img>
+
 
 ## Demo
 <img src="https://github.com/rpast/ALP/blob/master/static/alp_demo.gif?raw=true"></img>
