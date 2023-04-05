@@ -1,6 +1,6 @@
 # ALP
 
-ALP is an open-source, knowledge-grounded conversational AI system designed to generate responses grounded in relevant knowledge from external sources. 📖
+_ALP is an open-source, knowledge-grounded conversational AI system designed to generate responses grounded in relevant knowledge from external sources._ 📖💫
 
 ALP is currently in development, but it can be used locally on users' machines. Built with simplicity in mind, ALP reads chosen PDF file, has unlimited conversational memory and the ability to export conversation and source embeddings in JSON format.
 
@@ -93,7 +93,7 @@ For both cases in order for ALP to work you have to pass Open AI API key. Since 
 
 To get API key you have to create an account on https://platform.openai.com 🌐. As a new user you will get a few bucks to test API capabilities. This should be enough for a couple of hundred regular exchanges with ALP.
 
-<img src="https://github.com/rpast/ALP/blob/master/static/alp_welcome.png?raw=true" width="600px" height="500px"></img>
+<img src="https://github.com/rpast/ALP/blob/master/static/alp_welcome.png?raw=true" width="450px" height="350px"></img>
 
 
 ## Demo
