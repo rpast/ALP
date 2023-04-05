@@ -84,7 +84,7 @@ The app should open in your default web browser. If it doesn't, navigate to http
 Provide a session name, API key, and select PDF for upload to start interacting with the conversational research assistant.
 
 ## Demo
-<img src="https://github.com/rpast/ALP/blob/master/static/alp_demo_webapp.gif?raw=true"></img>
+<img src="https://github.com/rpast/ALP/blob/master/static/alp_demo.gif?raw=true"></img>
 
 
 ## Todo
