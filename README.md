@@ -95,6 +95,16 @@ To get API key you have to create an account on https://platform.openai.com 🌐
 
 <img src="https://github.com/rpast/ALP/blob/master/static/alp_welcome.png?raw=true" width="450px" height="350px"></img>
 
+After you hit "Start Session" button:
+1. If you chose an existing conversation from a dropdown menu, you will be moved to chat interface.
+2. If you defined a new session name and selected a .pdf to upload, you will be moved to a *Summary* page where you will see:
+   1. Session name
+   2. Number of pages that the app will send for embedding. This number may be larger than the number of pages in uploaded document since ALP splits pages if they happen to be dense with tokens. 
+   3. Estimated $ cost of embedding
+
+  After hitting 'Proceed', ALP starts embedding process that will take around a minute (for longer documents it will take proportionally longer). After the process is complete you will be moved to the chat interface.
+
+Anytime in the conversation you can get back to *Welcome* to start a new conversation. The whole exchange is automatically saved in the local database located under *./static/data/dbs/* 
 
 ## Demo
 <img src="https://github.com/rpast/ALP/blob/master/static/alp_demo.gif?raw=true"></img>
