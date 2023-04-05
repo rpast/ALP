@@ -1,0 +1,2 @@
+* Outsource embedding storage to vectorstore (eg Pinecone, Chroma) so there wont be necessary to load whole context to memory for nearest neighbors search.
+* Rewrite data load pipeline with langchain (document loaders, text splitters)

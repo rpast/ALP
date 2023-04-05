@@ -88,7 +88,7 @@ Provide a session name, API key, and select PDF for upload to start interacting 
 
 
 ## Todo
-1. [ ] Allow user to continue conversations on another sessions.
+1. [ ] Allow user to continue conversations on another sessions. << sessiong_mgt branch
 2. [ ] Display sources used by the agent for the answer.
 3. [ ] Allow user to upload more than one document
 4. [ ] User is able to upload text from other sources 

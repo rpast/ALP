@@ -1,6 +1,7 @@
 import re, ast
 from PyPDF2 import PdfReader
 import pandas as pd
+from tqdm import tqdm
 
 import params as prm
 from oai_tool import num_tokens_from_messages, get_embedding
@@ -20,10 +21,8 @@ def process_name(name):
         name = name.split('.pdf')[0]
 
     name = name.strip()
-    # use regex to replace all whitespaces with underscore
-    name = re.sub(r'\s+', '_', name)
     # exclude all signs that conflict with SQLite
-    name = re.sub(r'[^\w]', '', name)
+    name = re.sub(r'[^\w]', '_', name)
     name = name.lower()
 
     # truncate if needed
@@ -108,25 +107,27 @@ def split_pages(pages_df, session_name):
     # Form text column for each fragment
     pages_contents_long_df['text'] = "PAGE: " + pages_contents_long_df.index.astype(str) + " CONTENT: " + pages_contents_long_df['contents_split']
 
+    ## Drop rows where num_tokens_oai is less than 25
+    pages_contents_long_df = pages_contents_long_df[pages_contents_long_df['num_tokens_oai'] > 25].copy()
 
     # Further dataframe processing
     pages_contents_long_df = (
         pages_contents_long_df
         .drop(columns=['contents_split']) # Drop contents_split column
         .reset_index() # Reset index so chapter names are stored in columns
-        .rename(columns={'index': 'page'}) # Rename index column to chapter
+        .rename(columns={'index': 'page', 'num_tokens_oai': 'text_token_no'}) # Rename index column to chapter
         .assign(session_name=session_name) # Add session_name column
         .assign(interaction_type='source') ## Add interaction type column
+        .assign(timestamp=0) # Add timestamp column
+        [['session_name', 'interaction_type', 'text', 'text_token_no', 'page', 'timestamp']]
         )
-    ## Drop rows where num_tokens_oai is less than 25
-    pages_contents_long_df = pages_contents_long_df[pages_contents_long_df['num_tokens_oai'] > 25].copy()
 
     return pages_contents_long_df
 
 
 def embed_cost(pages_contents_long_df, price_per_k=0.0004):
     """Calculate the cost of running the model to get embeddings"""
-    embed_cost = (pages_contents_long_df['num_tokens_oai'].sum() / 1000) * price_per_k
+    embed_cost = (pages_contents_long_df['text_token_no'].sum() / 1000) * price_per_k
     return embed_cost
 
 

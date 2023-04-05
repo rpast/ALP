@@ -6,13 +6,20 @@ from pathlib import Path
 
 
 ## General parameters ##
-
 STATIC_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 DB_FOLDER = os.path.join(STATIC_FOLDER, "data", "dbs")
 UPLOAD_FOLDER = os.path.join(STATIC_FOLDER, "data", "uploads")
 
 DB_FOLDER = Path(f'./static/data/dbs')
 UPLOAD_FOLDER = Path(f'./static/data/uploads')
+
+DB_NAME = 'app.db'
+DB_PATH = os.path.join(DB_FOLDER, DB_NAME)
+
+CNT_TABLE_NAME = 'context'
+CNT_INTERIM_TABLE_NAME = 'interim_context'
+SESSION_TABLE_NAME = 'session'
+
 
 TOKEN_THRES = 500 # Number of tokens to split the document into chunks
 NUM_SAMPLES = 5 # Number of samples to take from the document
@@ -26,31 +33,30 @@ SUMMARY_TXT_ASST = "When a user asks me to summarize the source material or expl
 ## SQL parameters ##
 # Session name is defined by the user
 
-# INTERACTION_TABLE_SQL = """ 
-#     CREATE TABLE IF NOT EXISTS interaction (
-#         session_name,
-#         session_date, 
-#         id, 
-#         created, 
-#         completion_tokens, 
-#         prompt_tokens, 
-#         total_tokens, 
-#         role, 
-#         message_text
-#     ) 
-#     """
+INTERIM_CONTEXT_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS interim_context (
+        session_name TEXT NOT NULL,
+        interaction_type TEXT NOT NULL,
+        text TEXT NOT NULL,
+        text_token_no INTEGER,
+        page INTEGER
+        )"""
+
 
 CONTEXT_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS context (
-        session_name,
-        chapter_title,
-        chapter_text,
-        chapter_token_no,
-        chapter_embeddings        
+        session_name TEXT NOT NULL,
+        interaction_type TEXT NOT NULL,
+        text TEXT NOT NULL,
+        text_token_no INTEGER,
+        page INTEGER,
+        embedding TEXT NOT NULL,
+        edges TEXT,
+        timestamp INTEGER
         )"""
 
 SESSION_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS session (
-        session_name,
-        session_date
+        session_name TEXT NOT NULL,
+        session_date TEXT NOT NULL
         )"""

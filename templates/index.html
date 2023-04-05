@@ -32,7 +32,11 @@
             </div>
         </div>
     </div>
+    <!-- Fetch chat history and session name from the back-end -->
+    <script>
+        let chatHistory = {{ chat_history|tojson|safe }};
+        let sessionName = {{ session_name|tojson|safe }};
+    </script>
     <script src="../static/scripts/chat.js"></script>
-
 </body>
 </html>
