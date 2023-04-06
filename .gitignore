@@ -1,11 +1,9 @@
 # session data
-static/data/apikey.txt
-static/data/dbs/*
-static/data/uploads/*
-app.db
+/static/data/dbs/*
+!static/data/dbs/info.txt
 
-# bak project files
-logic_bak/*
+/static/data/uploads/*
+!static/data/uploads/info.txt
 
 # virtualenv
 alp_venv/
