@@ -12,6 +12,7 @@ ALP is intended to be run locally on users machines 💻. All is needed is Pytho
 
 - [ALP](#alp)
   - [Table of Contents](#table-of-contents)
+  - [Changelog](#changelog)
   - [Introduction](#introduction)
   - [Features](#features)
   - [Installation](#installation)
@@ -19,6 +20,10 @@ ALP is intended to be run locally on users machines 💻. All is needed is Pytho
   - [Usage](#usage)
   - [Demo](#demo)
   - [Todo](#todo)
+
+## Changelog
+- 20230405 - program stores converastion history and allows to continue it
+- 20230406 - bug-fix that prevented program to initialize database under /static/data/dbs/; requirements.txt fix
 
 ## Introduction
 ALP is designed to enhance the accuracy of responses of GPT-3.5 model related to a specific PDF document by using a retrieval augmentation technique. This approach ensures that the most relevant context is always provided to the model with user's question. ALP was created to help me manage the overwhelming knowledge base of research papers, books and notes, making it easier to access crucial information without having to read through everything.
@@ -44,28 +49,34 @@ To set up ALP on your local machine, follow these steps:
 
 Make sure you have Python installed on your machine. We recommend installing [Anaconda](https://www.anaconda.com/products/distribution) for an easy setup, although it may not be the most resource-efficient option.
 
-2. **Clone the repository:**
+2. **Fork and clone the repository:**
 
 ```bash 
 git clone https://github.com/yourusername/alp.git 
-cd alp
+cd ALP
 ```
 
 3. **Create a virtual environment and activate it:**
 
+From within the ALP/ local directory invoke following commands
+
+For Linux users in Bash:
+
 ```bash 
-python3 -m venv venv 
-source venv/bin/activate
+python3 -m venv venvname
+source venvname/bin/activate
 ```
 
-For Windows users:
+For Windows users in CMD:
 
-```bash
-python -m venv venv 
-venv\Scripts\activate
+```
+python -m venv venvname
+venvname\Scripts\activate.bat
 ```
 
-4. **Install the required dependencies:**
+This should create ALP/venvname/ directory and activate virtual environment.
+
+4. **Install the required dependencies to virtual environment:**
 
 ```bash
 pip install -r requirements.txt
