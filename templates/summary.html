@@ -10,24 +10,31 @@
 </head>
 <body>
     <div class="hero">
-        <div class="content">
-            <h1>Summary</h1>
-            <p>Session Name: {{ session_name }}</p>
-            <p>Embedding cost: {{ embedding_cost }}</p>
-            <p>Document length: {{ doc_length }}</p>
-            {% if length_warning %}
-                <div class="alert alert-warning" role="alert">
-                    Embedding process may take several minutes as this document is long.
+        <div class="container-menu">
+            <div class="content">
+                <h1>Summary</h1>
+                <p>Session Name: {{ session_name }}</p>
+                <p>Embedding cost: {{ embedding_cost }}</p>
+                <p>Document length: {{ doc_length }}</p>
+                {% if length_warning %}
+                    <div class="alert alert-warning" role="alert">
+                        Embedding process may take several minutes as this document is long.
+                    </div>
+                {% endif %}
+                <form action="/start_embedding" method="post" id="proceed-form">
+                    <button type="submit">Proceed</button>
+                </form>
+                
+            </div>
+            <div class="right-side">
+                <div class="spinner" id="processing" style="display: none;">
+                    <div class="cube1"></div>
+                    <div class="cube2"></div>
                 </div>
-            {% endif %}
-            <form action="/start_embedding" method="post" id="proceed-form">
-                <button type="submit">Proceed</button>
-            </form>
-            
+            </div>
         </div>
-        <div class="spinner" id="processing"></div>
     </div>
-    
+    <script src='../static/scripts/summary.js'></script>
 </body>
 </html>
 

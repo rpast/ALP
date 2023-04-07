@@ -1,11 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    const sessionNameInput = document.getElementById("new_session_name");
-    var existingSession = document.getElementById("existing_session");
-    var newSessionName = document.getElementById("new_session_name");
-    var fileInput = document.querySelector('input[type="file"]');
+    let sessionNameInput = document.getElementById("new_session_name");
+    let existingSession = document.getElementById("existing_session");
+    let newSessionName = document.getElementById("new_session_name");
+    let fileInput = document.querySelector('input[type="file"]');
+    let conditionalText = document.getElementById("conditional-text");
 
-    console.log("sessionNames:", sessionNames);
 
     // Process the session name to make it compatible with SQLite
     function processSessionName(name) {
@@ -17,6 +17,18 @@ document.addEventListener("DOMContentLoaded", function () {
         return name;
     }
 
+    //Update text according to the condition set
+    function updateConditionalText() {
+        if (existingSession.value) {
+            conditionalText.innerText = "You are about to continue a conversation with ALP. Hit 'Start Session' to continue.";
+        } else if (newSessionName.value) {
+            conditionalText.innerText = "You are about to set a new session with ALP. Please select a .pdf file for upload and click 'Start Session'.";
+        } else {
+            conditionalText.innerText = "(ﾉ☉ヮ⚆)ﾉ ⌒*:･ﾟ✧";
+        }
+    }
+
+    // disable/enable the session name and file upload input fields
     existingSession.addEventListener("change", function () {
         console.log("existingSession change");
         if (this.value !== "") {
@@ -38,4 +50,12 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+
+
+    existingSession.addEventListener("change", updateConditionalText);
+    newSessionName.addEventListener("input", updateConditionalText);
+    
+
 });
+
+

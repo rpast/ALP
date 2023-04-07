@@ -35,11 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const askForm = document.getElementById("ask-form");
     const responseDiv = document.getElementById("response");
 
-    console.log("askForm:", askForm); // Add this line
-    console.log("responseDiv:", responseDiv); // Add this line
-
     askForm.addEventListener("submit", function (event) {
-        console.log("Form submit event triggered"); // Add this line
 
         event.preventDefault();
 

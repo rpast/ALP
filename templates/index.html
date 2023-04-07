@@ -10,25 +10,32 @@
 </head>
 <body>
     <div class="hero">
-        <div class="chat-container">
-            <div class="chat-box">
-                <div class="response-container">
-                    <div id="response"></div>
-                    <div class="spinner" id="processing" style="display: none;">
-                        <div class="cube1"></div>
-                        <div class="cube2"></div>
+        <div class="container-interface">
+            
+            <div class="chat-container">
+                <div class="chat-box">
+                    <div class="response-container">
+                        <div id="response"></div>
+                        <div class="spinner" id="processing" style="display: none;">
+                            <div class="cube1"></div>
+                            <div class="cube2"></div>
+                        </div>
                     </div>
                 </div>
+                <div class="input-container">
+                    <form id="ask-form">
+                        <!-- <label for="question">User Input:</label> -->
+                        <textarea name="question" required style="width: 66%;"></textarea>
+                        <div class="button-container">
+                            <input type="submit" value="Ask">
+                            <input type="button" value="Export" onclick="window.location.href='/export_interactions'">
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="input-container">
-                <form id="ask-form">
-                    <!-- <label for="question">User Input:</label> -->
-                    <textarea name="question" required style="width: 66%;"></textarea> <!-- Add inline style width: 66%; -->
-                    <div class="button-container">
-                        <input type="submit" value="Ask">
-                        <input type="button" value="Export" onclick="window.location.href='/export_interactions'">
-                    </div>
-                </form>
+            <div class="right-side-interface">
+                    <p><< back</p>
+                    <p>This is right side</p>
             </div>
         </div>
     </div>
