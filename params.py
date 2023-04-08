@@ -58,5 +58,6 @@ CONTEXT_TABLE_SQL = """
 SESSION_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS session (
         session_name TEXT NOT NULL,
-        session_date TEXT NOT NULL
+        session_date TEXT NOT NULL,
+        session_source TEXT NOT NULL
         )"""

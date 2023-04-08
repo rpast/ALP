@@ -7,6 +7,9 @@ document.addEventListener("DOMContentLoaded", function () {
     let conditionalText = document.getElementById("conditional-text");
 
 
+    let sNames = sessionNames.map(element => element[0]);
+
+
     // Process the session name to make it compatible with SQLite
     function processSessionName(name) {
         name = name.trim();

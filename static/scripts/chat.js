@@ -27,7 +27,6 @@ function renderChatHistory(chatHistory) {
     // Scroll to the bottom
     scrollToBottom(responseDiv);
 }
-
 renderChatHistory(chatHistory);
 
 

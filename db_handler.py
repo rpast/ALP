@@ -91,7 +91,7 @@ class DatabaseHandler:
 
 
     # TODO: use high performance library for writing pandas dataframes to sqlite
-    def insert_session(self, sname, sdate) -> bool:
+    def insert_session(self, sname, sdate, ssource) -> bool:
         """Insert session data into the database's Sessions table.
         :param sname: session name
         :param sdate: session date
@@ -111,7 +111,7 @@ class DatabaseHandler:
                 return False
             
             
-            c.execute(f"INSERT INTO session VALUES ('{sname}', '{sdate}')")
+            c.execute(f"INSERT INTO session VALUES ('{sname}', '{sdate}', '{ssource}')")
             self.conn.commit()
 
             print(f"Session: \"{sname}\" inserted into the database")
@@ -233,14 +233,14 @@ class DatabaseHandler:
 
 
     # method to load all session names from context table in the database
-    def load_session_names(self, table_name='context') -> list:
-        """Load session names from the database to a list
+    def load_session_names(self, table_name='session') -> list:
+        """Load session names and dates from the database to a list
         :param table_name: table name
         :return:
         """
         try:
             c = self.conn.cursor()
-            c.execute(f"SELECT DISTINCT SESSION_NAME FROM {table_name}")
+            c.execute(f"SELECT DISTINCT session_name, session_date FROM {table_name}")
             data = c.fetchall()
             return data
         
@@ -248,7 +248,8 @@ class DatabaseHandler:
             print(e)
 
             return None
-        
+
+
     # method to delete a given session from the database
     def delete_session(self, session_name) -> bool:
         """Delete a session from the database

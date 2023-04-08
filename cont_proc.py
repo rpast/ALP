@@ -45,6 +45,12 @@ def clean_text(text):
     return text
 
 
+def long_date_to_short(date):
+    """Convert long date to short date"""
+    date = date.split(' ')[0]
+    return date
+
+
 def pages_to_dict(pages):
     """convert langchain.docstore.document.Document to dict"""
     pages_dict = {}
