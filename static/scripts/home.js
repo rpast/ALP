@@ -7,9 +7,13 @@ document.addEventListener("DOMContentLoaded", function () {
     let conditionalText = document.getElementById("conditional-text");
 
 
-    let sNames = sessionNames.map(element => element[0]);
+    // grab first element of every tupple form existing sessions
+    let sNames = Array.from(existingSession.options).map(option => {
+        const match = option.value.match(/\('([^']+)',/);
+        return match ? match[1] : null;
+    }).filter(name => name !== null);
 
-
+    
     // Process the session name to make it compatible with SQLite
     function processSessionName(name) {
         name = name.trim();
@@ -23,9 +27,9 @@ document.addEventListener("DOMContentLoaded", function () {
     //Update text according to the condition set
     function updateConditionalText() {
         if (existingSession.value) {
-            conditionalText.innerText = "You are about to continue a conversation with ALP. Hit 'Start Session' to continue.";
+            conditionalText.innerText = "You will continue a conversation with ALP. Hit 'Start Session' to continue.";
         } else if (newSessionName.value) {
-            conditionalText.innerText = "You are about to set a new session with ALP. Please select a .pdf file for upload and click 'Start Session'.";
+            conditionalText.innerText = "You will set a new session. Please select a .pdf file for upload and click 'Session Start'.";
         } else {
             conditionalText.innerText = "(ﾉ☉ヮ⚆)ﾉ ⌒*:･ﾟ✧";
         }
@@ -47,9 +51,9 @@ document.addEventListener("DOMContentLoaded", function () {
         sessionNameInput.addEventListener("change", function () {
             console.log("sessionNameInput change");
             const enteredSessionName = processSessionName(this.value);;
-            if (sessionNames.includes(enteredSessionName)) {
-            alert("The session name is already taken. Please choose a different one. Note that program turns all special characters into '_'");
-            this.value = "";
+            if (sNames.includes(enteredSessionName)) {
+                alert("The session name is already taken. Please choose a different one. Note that program turns all special characters into '_'");
+                this.value = "";
             }
         });
     }
@@ -60,5 +64,3 @@ document.addEventListener("DOMContentLoaded", function () {
     
 
 });
-
-

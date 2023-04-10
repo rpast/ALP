@@ -5,7 +5,7 @@ import os
 import sqlite3
 import tiktoken
 import pandas as pd
-import params as prm
+# import params as prm
 from oai_tool import get_embedding
 
 

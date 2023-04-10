@@ -1,7 +1,5 @@
 import re, ast
-from PyPDF2 import PdfReader
 import pandas as pd
-from tqdm import tqdm
 
 import params as prm
 from oai_tool import num_tokens_from_messages, get_embedding

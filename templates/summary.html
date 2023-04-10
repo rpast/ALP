@@ -30,23 +30,30 @@
                     <p><strong>Embedding cost:</strong> {{ embedding_cost }}</p>
                     <p><strong>Document length:</strong> {{ doc_length }}</p>
                     {% if length_warning %}
-                        <div class="alert alert-warning" role="alert">
-                            Embedding process may take several minutes as this document is long.
-                        </div>
+                        <p class="warning">
+                            Long document - embedding process may take several minutes.
+                        </p>
                     {% endif %}
-                    <form action="/start_embedding" method="post" id="proceed-form">
-                        <button type="submit" id="proceed">Proceed >></button>
+                    <form action="/start_embedding" method="post" id="proceed-form" class="button-container">
+                        <input type="button" id="proceed" class="btn-l" value="<< Home" onclick="window.location.href='http://localhost:5000/'">
+                        <input type="submit" id="proceed" class="btn-r" value="Proceed >>">
                     </form>
-                    
-                </div>
-                <div class="right-side">
-                    <p>
-                        Embedding cost is calculated basing on the length of the document and Open AI's pricing table.
-                    </p>
                     <div class="spinner" id="processing" style="display: none;">
                         <div class="cube1"></div>
                         <div class="cube2"></div>
                     </div>
+                </div>
+                <div class="right-side">
+                    <p>
+                        A pdf embedding process is required for every new session.
+                    </p>
+                    <p>
+                        Embedding cost is calculated basing on the length of the document and Open AI's pricing table.
+                    </p>
+                    <p>
+                        The process will take from several seconds to several minutes depending on the length of the document.
+                    </p>
+                    
                 </div>
             </div>
         </div>

@@ -24,6 +24,7 @@ ALP is intended to be run locally on users machines 💻. All is needed is Pytho
 ## Changelog
 - 20230405 - program stores converastion history and allows to continue it
 - 20230406 - bug-fix that prevented program to initialize database under /static/data/dbs/; requirements.txt fix
+- 20230411 - interface upgrade, bugfixes
 
 ## Introduction
 ALP is designed to enhance the accuracy of responses of GPT-3.5 model related to a specific PDF document by using a retrieval augmentation technique. This approach ensures that the most relevant context is always provided to the model with user's question. ALP was created to help me manage the overwhelming knowledge base of research papers, books and notes, making it easier to access crucial information without having to read through everything.
@@ -104,7 +105,7 @@ For both cases in order for ALP to work you have to pass Open AI API key. Since 
 
 To get API key you have to create an account on https://platform.openai.com 🌐. As a new user you will get a few bucks to test API capabilities. This should be enough for a couple of hundred regular exchanges with ALP.
 
-<img src="https://github.com/rpast/ALP/blob/master/static/alp_welcome.png?raw=true" width="450px" height="350px"></img>
+<img src="https://github.com/rpast/ALP/blob/interface_upgrade/static/alp_demo.gif?raw=true" width="450px" height="350px"></img>
 
 After you hit "Start Session" button:
 1. If you chose an existing conversation from a dropdown menu, you will be moved to chat interface.

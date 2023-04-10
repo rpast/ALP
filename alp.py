@@ -1,10 +1,7 @@
-import os, openai, time, datetime, sys, io, re
+import os, openai, time, datetime, io, re
 
 from flask import Flask, request, session, render_template, redirect, url_for, jsonify, send_file
 from langchain.document_loaders import PyPDFLoader
-
-import pandas as pd
-
 
 ## Local modules import
 from chatbot import Chatbot
@@ -18,10 +15,13 @@ import webbrowser
 from waitress import serve
 from threading import Timer
 
+
+# Set up paths
 template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)),"static")
 
 
+# Initiate Flask app
 app = Flask(
     __name__, 
     template_folder=template_folder,
@@ -422,8 +422,8 @@ def open_browser():
 
 if __name__ == '__main__':
     # Run DEV server
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # app.run(debug=True, host='0.0.0.0', port=5000)
 
     # run PROD server
-    # Timer(1, open_browser).start()
-    # serve(app, host='0.0.0.0', port=5000)
+    Timer(1, open_browser).start()
+    serve(app, host='0.0.0.0', port=5000)

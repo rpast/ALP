@@ -56,6 +56,7 @@ body {
     padding: 2em;
     width: 50%;
     min-width: 100%;
+    min-height: 350px;
     background: rgb(246, 246, 246);
     border-radius: 0;
 }
@@ -145,6 +146,11 @@ a {
     padding-right: 1em;
 }
 
+.warning{
+    font-weight: 800;
+    color: #e94b5d
+}
+
 textarea {
     width: 100%;
     height: 4em;
@@ -172,7 +178,7 @@ textarea {
     justify-content: space-between;
     align-items: center;
     width: 33%;
-    margin-left: 1em;
+    /* margin-left: 1em; */
 }
 
 #proceed {
@@ -190,10 +196,9 @@ input[type="text"], input[type="file"] {
     align-items: center;
 }
 
-#button {
-    padding: 1em;
+#ask-button {
+    margin: 0 2em 0 1em;
 }
-
 
 
 input[type="text"], input[type="file"] {
@@ -208,13 +213,22 @@ input[type="file"] {
 input[type="submit"] {
     max-width: 100px;
 }
-
+input[type="button"] {
+    max-width: 100px;   
+}
+.btn-l {
+    margin-right: 1em !important; /* override bootstrap */
+}
+.btn-r {
+    margin-right: 1em !important; /* override bootstrap */
+}
 
 /* Animate the spinner widget */
 .spinner {
     width: 40px;
     height: 40px;
     position: relative;
+    margin: 1.8em 0 0 0;
 }
 .cube1,
 .cube2 {
