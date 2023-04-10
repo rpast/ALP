@@ -2,29 +2,68 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    background-color: #000000ad;
-    font-family: 'Arial', 'Helvetica', sans-serif;
-    color: #fff7f2d9;
+    font-family: 'Titillium Web', sans-serif;
 }
+
+body {
+    background-image: radial-gradient(4px at center,rgb(0, 0, 0) 20%, transparent 20%), 
+                    radial-gradient(4px at center,rgb(0, 0, 0) 20%, transparent 20%);
+    background-position: 0px 0px, 4px 3px;
+    background-size: 8px 6px;
+    background-color: #e94b5d5a;
+}
+
 
 .hero {
     min-height: 100vh;
-    /* background: linear-gradient(45deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/static/libhero.jpg') no-repeat center center; */
-    background-size: cover;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    border-radius: 0;
 }
 
+.card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-width: 800px;
+    border: 2px solid #000000;
+    border-radius: 0;
+    width: 50%;
+    max-width: 1000px;
+    box-shadow: #000000 10px 10px 0px -2px;
+}
+
+.card-header {
+    font-weight: 800;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-start;
+    align-items: flex-start;
+    background-color: rgba(0, 0, 0, 0.158);
+    color: rgb(0, 0, 0);
+    border-bottom: 2px solid #000000;
+    border-radius: 0 !important;
+}
 .container-menu {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    padding: 2em;
     width: 50%;
-    min-width: 800px;
-    height: 50vh;
+    min-width: 100%;
+    background: rgb(246, 246, 246);
+    border-radius: 0;
+}
+
+.content {
+    padding: 0 4em 0 2em;
+    width: 50%;
+    height:100%;
 }
 
 .container-interface {
@@ -36,11 +75,6 @@ html, body {
     height: 90vh;
 }
 
-.content {
-    padding: 0 4em 0 2em;
-    width: 50%;
-    height:100%;
-}
 
 .right-side {
     width: 50%;
@@ -65,7 +99,7 @@ html, body {
 }
 
 a {
-    color: #16b429;
+    color: #16b4a2;
     text-decoration: none;
     margin: 0 0 2em 0;
 }
@@ -83,20 +117,21 @@ a {
 .chat-box {
     flex-grow: 1;
     width: 100%;
-    border: 1px solid #16b429;
-    border-radius: 10px;
-    padding: 2em;
+    border-bottom: 2px solid #000000;
+    border-radius: 0;
+    padding: 1em 0em 2em 0em;
     overflow-y: hidden;
 }
 
 .response-container {
     width: 100%;
-    height: calc(90vh - 6em); /*Set the height to 90% of the viewport height minus the space taken by the input container and other elements */
+    height: 100%;
+    /* height: calc(90vh - 6em); Set the height to 90% of the viewport height minus the space taken by the input container and other elements */
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     overflow-y: auto;
-    padding: 1em; 
+    padding: 0em 1em 2em 1em; 
 }
 
 .input-container {
@@ -109,7 +144,6 @@ a {
     padding-left: 1em;
     padding-right: 1em;
 }
-
 
 textarea {
     width: 100%;
@@ -139,6 +173,10 @@ textarea {
     align-items: center;
     width: 33%;
     margin-left: 1em;
+}
+
+#proceed {
+    margin: 4em 0 0 0;
 }
 
 input[type="text"], input[type="file"] {
@@ -182,7 +220,7 @@ input[type="submit"] {
 .cube2 {
 width: 20px;
 height: 8px;
-background-color: #16b429;
+background-color: #16b4a2;
 position: absolute;
 animation: bump 1.8s infinite ease-in-out;
 }
