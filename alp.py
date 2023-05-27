@@ -1,4 +1,9 @@
-import os, openai, time, datetime, io, re
+import os
+import io
+import re
+import time
+import openai
+import datetime
 
 from flask import Flask, request, session, render_template, redirect, url_for, jsonify, send_file
 from langchain.document_loaders import PyPDFLoader
@@ -80,13 +85,7 @@ def proc_session():
 
     ## Get the data from the form
     # Pass API key right to the openai object
-    # openai.api_key = request.form['api_key']
-
-    # load API key from /home/nf/Documents/projekty/ai_apps/ALP/ALP/static/data/api_key.txt
-    with open('/home/nf/Documents/projekty/ai_apps/ALP/ALP/static/data/api_key.txt', 'r') as f:
-        api_key = f.read()
-        openai.api_key = api_key    
-
+    openai.api_key = request.form['api_key']
 
     # Grab session names from the form
     new_session_name = request.form.get('new_session_name',0)
@@ -183,8 +182,6 @@ def start_embedding():
         session['SESSION_NAME'], 
         table_name='interim_context'
         )
-    print('!!!DEBUG')
-    print(pages_refined_df.head())
 
     # Perform the embedding process here
     print('Embedding process started...')
@@ -204,8 +201,6 @@ def start_embedding():
     print(embed_df.head())
     #######################
 
-    print('!!!DEBUG')
-    print(pages_embed_df['uuid'].head())
     # insert data with embedding to main context table with if exist = append.
     db.insert_context(pages_embed_df)
     db.close_connection()
@@ -450,8 +445,8 @@ def open_browser():
 
 if __name__ == '__main__':
     # Run DEV server
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # app.run(debug=True, host='0.0.0.0', port=5000)
 
     # run PROD server
-    # Timer(1, open_browser).start()
-    # serve(app, host='0.0.0.0', port=5000)
+    Timer(1, open_browser).start()
+    serve(app, host='0.0.0.0', port=5000)
