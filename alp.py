@@ -39,6 +39,7 @@ if not db_exist:
     db.write_db(prm.SESSION_TABLE_SQL)
     db.write_db(prm.INTERIM_CONTEXT_TABLE_SQL)
     db.write_db(prm.CONTEXT_TABLE_SQL)
+    db.write_db(prm.EMBEDDINGS_TABLE_SQL)
     db.close_connection()
 else:
     db = DatabaseHandler(prm.DB_PATH)
@@ -79,7 +80,13 @@ def proc_session():
 
     ## Get the data from the form
     # Pass API key right to the openai object
-    openai.api_key = request.form['api_key']
+    # openai.api_key = request.form['api_key']
+
+    # load API key from /home/nf/Documents/projekty/ai_apps/ALP/ALP/static/data/api_key.txt
+    with open('/home/nf/Documents/projekty/ai_apps/ALP/ALP/static/data/api_key.txt', 'r') as f:
+        api_key = f.read()
+        openai.api_key = api_key    
+
 
     # Grab session names from the form
     new_session_name = request.form.get('new_session_name',0)
@@ -115,6 +122,9 @@ def proc_session():
         file_name = cproc.process_name(file_.filename)
         session['SESSION_SOURCE'] = file_name
 
+        # Generate session uuid
+        session_uuid = cproc.create_uuid()
+
         # Save the file to the upload folder
         saved_fname = session['SESSION_NAME'] + '_' + file_name
         fpath = os.path.join(prm.UPLOAD_FOLDER, saved_fname)
@@ -135,15 +145,20 @@ def proc_session():
         doc_length = pages_refined_df.shape[0]
         length_warning = doc_length / 60 > 1
 
+        ## DMODEL IMPLEMENTATION
+        # create uuid for the context instances
+        pages_refined_df['uuid'] = [cproc.create_uuid() for x in range(pages_refined_df.shape[0])]  
+
         # Populate session and interim context table
         db.create_connection(prm.DB_PATH)
         # BUG: session table doesnt exist (!?)
-        db.insert_session(session['SESSION_NAME'], session['SESSION_DATE'], session['SESSION_SOURCE'])
+        db.insert_session(session_uuid, session['SESSION_NAME'], session['SESSION_DATE'], session['SESSION_SOURCE'])
         db.insert_context(pages_refined_df, table_name='interim_context', if_exist='replace')
         db.close_connection()
 
         return render_template(
             'summary.html', 
+            session_uuid=session_uuid,
             session_name=session_name, 
             embedding_cost=embedding_cost,
             doc_length=doc_length,
@@ -168,16 +183,29 @@ def start_embedding():
         session['SESSION_NAME'], 
         table_name='interim_context'
         )
+    print('!!!DEBUG')
+    print(pages_refined_df.head())
 
     # Perform the embedding process here
     print('Embedding process started...')
     pages_embed_df = cproc.embed_pages(pages_refined_df)
     print('Embedding process finished.')
     ## TODO: use vectorstore to store embeddings
+    print('!!!!!', pages_embed_df['embedding'].dtype)
     pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
     # Prepare for future functionalities
     pages_embed_df['edges'] = None
 
+    ## DMODEL UPDATE
+    ## Decouple context from embeddings
+    ## TODO: implement UUID for context
+    to_serialize_df = pages_embed_df[['session_name', 'embedding']]
+    embed_df = cproc.serialize_embedding(to_serialize_df)
+    print(embed_df.head())
+    #######################
+
+    print('!!!DEBUG')
+    print(pages_embed_df['uuid'].head())
     # insert data with embedding to main context table with if exist = append.
     db.insert_context(pages_embed_df)
     db.close_connection()
@@ -200,7 +228,7 @@ def index():
 
     db.create_connection()
     # This assumes unique session names
-    s_name, s_date, s_src = db.query_db(
+    s_uuid, s_name, s_date, s_src = db.query_db(
         f"SELECT * FROM session WHERE session_name = '{session['SESSION_NAME']}'"
         )[0]
     db.close_connection()
@@ -422,8 +450,8 @@ def open_browser():
 
 if __name__ == '__main__':
     # Run DEV server
-    # app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
 
     # run PROD server
-    Timer(1, open_browser).start()
-    serve(app, host='0.0.0.0', port=5000)
+    # Timer(1, open_browser).start()
+    # serve(app, host='0.0.0.0', port=5000)

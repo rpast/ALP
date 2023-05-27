@@ -91,7 +91,7 @@ class DatabaseHandler:
 
 
     # TODO: use high performance library for writing pandas dataframes to sqlite
-    def insert_session(self, sname, sdate, ssource) -> bool:
+    def insert_session(self, uuid, sname, sdate, ssource) -> bool:
         """Insert session data into the database's Sessions table.
         :param sname: session name
         :param sdate: session date
@@ -111,7 +111,7 @@ class DatabaseHandler:
                 return False
             
             
-            c.execute(f"INSERT INTO session VALUES ('{sname}', '{sdate}', '{ssource}')")
+            c.execute(f"INSERT INTO session VALUES ('{uuid}', '{sname}', '{sdate}', '{ssource}')")
             self.conn.commit()
 
             print(f"Session: \"{sname}\" inserted into the database")
@@ -190,7 +190,7 @@ class DatabaseHandler:
             c.execute(f"SELECT * FROM {table_name} WHERE SESSION_NAME = '{session_name}'")
             data = c.fetchall()
             # get column names
-            print([desc[0] for desc in c.description])
+            # print([desc[0] for desc in c.description])
             colnames = [desc[0] for desc in c.description]
             context_df = pd.DataFrame(data, columns=colnames)
             context_df['timestamp'] = pd.to_numeric(context_df['timestamp'])

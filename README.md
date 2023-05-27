@@ -122,6 +122,12 @@ Anytime in the conversation you can get back to *Welcome* to start a new convers
 
 ## Todo
 1. [x] Allow user to continue conversations on another sessions.
+2. [ ] Save chat history in separate table
+3. [ ] Upload document into context table
+3. [ ] Allow user to choose context for conversation, or continue the previous one
+
+
+
    1. [ ] User can clean-up the conversation leaving only embeddings in the conversation hisory.
    2. [ ] User can delete unwanted converastions from database.
 2. [ ] Display sources used by the agent for the answer.

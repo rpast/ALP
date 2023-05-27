@@ -1,4 +1,7 @@
-import re, ast
+import re 
+import ast
+import uuid
+import pickle
 import pandas as pd
 
 import params as prm
@@ -48,6 +51,8 @@ def long_date_to_short(date):
     date = date.split(' ')[0]
     return date
 
+def create_uuid():
+    return str(uuid.uuid4())
 
 def pages_to_dict(pages):
     """convert langchain.docstore.document.Document to dict"""
@@ -155,3 +160,8 @@ def convert_table_to_dct(table):
     return table_dct
 
 
+def serialize_embedding(embedding: pd.DataFrame):
+    """Convert embedding to string to store in db
+    """
+    embedding['embedding'] = embedding['embedding'].apply(lambda x: pickle.dumps(x))
+    return embedding

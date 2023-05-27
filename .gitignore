@@ -5,6 +5,9 @@
 /static/data/uploads/*
 !static/data/uploads/info.txt
 
+api_key.txt
+devlog.txt
+
 # virtualenv
 alp_venv/
 

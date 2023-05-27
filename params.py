@@ -35,6 +35,7 @@ SUMMARY_TXT_ASST = "When a user asks me to summarize the source material or expl
 
 INTERIM_CONTEXT_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS interim_context (
+        uuid TEXT NOT NULL,
         session_name TEXT NOT NULL,
         interaction_type TEXT NOT NULL,
         text TEXT NOT NULL,
@@ -45,6 +46,7 @@ INTERIM_CONTEXT_TABLE_SQL = """
 
 CONTEXT_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS context (
+        uuid TEXT NOT NULL,
         session_name TEXT NOT NULL,
         interaction_type TEXT NOT NULL,
         text TEXT NOT NULL,
@@ -57,7 +59,26 @@ CONTEXT_TABLE_SQL = """
 
 SESSION_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS session (
+        uuid TEXT NOT NULL,
         session_name TEXT NOT NULL,
         session_date TEXT NOT NULL,
         session_source TEXT NOT NULL
+        )"""
+
+CHAT_HIST_TABLE = """
+    CREATE TABLE IF NOT EXISTS chat_history (
+        uuid TEXT NOT NULL,
+        session_name TEXT NOT NULL,
+        interaction_type TEXT NOT NULL,
+        text TEXT NOT NULL,
+        text_token_no INTEGER,
+        embedding BLOB NOT NULL,
+        timestamp INTEGER
+        )"""
+
+# uuid is a FK -> context table, chat_history table
+EMBEDDINGS_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS embeddings (
+        uuid TEXT NOT NULL,
+        embedding BLOB NOT NULL
         )"""
