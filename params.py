@@ -33,7 +33,7 @@ SUMMARY_TXT_ASST = "When a user asks me to summarize the source material or expl
 ## SQL parameters ##
 # Session name is defined by the user
 
-INTERIM_CONTEXT_TABLE_SQL = """
+INTERIM_COLLECTIONS_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS interim_context (
         uuid TEXT NOT NULL,
         session_name TEXT NOT NULL,
@@ -43,8 +43,7 @@ INTERIM_CONTEXT_TABLE_SQL = """
         page INTEGER
         )"""
 
-
-CONTEXT_TABLE_SQL = """
+COLLECTIONS_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS context (
         uuid TEXT NOT NULL,
         session_name TEXT NOT NULL,

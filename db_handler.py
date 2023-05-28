@@ -7,6 +7,7 @@ import tiktoken
 import pandas as pd
 # import params as prm
 from oai_tool import get_embedding
+from cont_proc import create_uuid
 
 
 class DatabaseHandler:
@@ -153,6 +154,7 @@ class DatabaseHandler:
         :return:
         """
 
+        uuid = create_uuid()
         embedding = get_embedding(message)
 
         encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
@@ -160,7 +162,7 @@ class DatabaseHandler:
 
         message = message.replace('"', '').replace("'", "")
 
-        query = f"INSERT INTO context VALUES ('{session_name}', '{inter_type}', '{message}', '{num_tokens_oai}', '{page}', '{embedding}', '{edges}','{timestamp}')"
+        query = f"INSERT INTO context VALUES ('{uuid}', '{session_name}', '{inter_type}', '{message}', '{num_tokens_oai}', '{page}', '{embedding}', '{edges}','{timestamp}')"
 
         try:
             c = self.conn.cursor()
