@@ -153,8 +153,19 @@ def proc_session():
         # Populate session and interim context table
         with db as db_conn:
         # BUG: session table doesnt exist (!?)
-            db_conn.insert_session(session_uuid, session['SESSION_NAME'], session['SESSION_DATE'], session['SESSION_SOURCE'])
-            db_conn.insert_context(pages_refined_df, table_name='interim_collections', if_exist='replace')
+            db_conn.insert_session(
+                session_uuid,
+                'collection uuid',
+                'chat uuid',
+                session['SESSION_NAME'], 
+                session['SESSION_DATE'], 
+                session['SESSION_SOURCE']
+                )
+            db_conn.insert_context(
+                pages_refined_df, 
+                table_name='interim_collections', 
+                if_exist='replace'
+                )
     
 
         return render_template(
@@ -228,8 +239,11 @@ def index():
 
     with db as db_conn:
     # This assumes unique session names
-        s_uuid, s_name, s_date, s_src = db_conn.query_db(
-            f"SELECT * FROM session WHERE session_name = '{session['SESSION_NAME']}'"
+        s_name, s_date, s_src = db_conn.query_db(
+            f"""
+            SELECT session_name, session_date, session_source 
+            FROM session WHERE session_name = '{session['SESSION_NAME']}'
+            """
             )[0]
     
 

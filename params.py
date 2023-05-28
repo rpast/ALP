@@ -33,9 +33,24 @@ SUMMARY_TXT_ASST = "When a user asks me to summarize the source material or expl
 ## SQL parameters ##
 # Session name is defined by the user
 
+SESSION_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS session (
+    
+        uuid TEXT NOT NULL,
+        collection_uuid TEXT NOT NULL,
+        chat_uuid TEXT NOT NULL,
+    
+        session_name TEXT NOT NULL,
+        session_date TEXT NOT NULL,
+        session_source TEXT NOT NULL
+        )"""
+
 INTERIM_COLLECTIONS_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS interim_collections (
+    
         uuid TEXT NOT NULL,
+        doc_uuid TEXT NOT NULL,
+    
         session_name TEXT NOT NULL,
         interaction_type TEXT NOT NULL,
         text TEXT NOT NULL,
@@ -45,7 +60,10 @@ INTERIM_COLLECTIONS_TABLE_SQL = """
 
 COLLECTIONS_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS collections (
+        
         uuid TEXT NOT NULL,
+        doc_uuid TEXT NOT NULL,
+
         session_name TEXT NOT NULL,
         interaction_type TEXT NOT NULL,
         text TEXT NOT NULL,
@@ -56,17 +74,12 @@ COLLECTIONS_TABLE_SQL = """
         timestamp INTEGER
         )"""
 
-SESSION_TABLE_SQL = """
-    CREATE TABLE IF NOT EXISTS session (
-        uuid TEXT NOT NULL,
-        session_name TEXT NOT NULL,
-        session_date TEXT NOT NULL,
-        session_source TEXT NOT NULL
-        )"""
-
 CHAT_HIST_TABLE = """
     CREATE TABLE IF NOT EXISTS chat_history (
+    
         uuid TEXT NOT NULL,
+        doc_uuid TEXT NOT NULL,
+    
         session_name TEXT NOT NULL,
         interaction_type TEXT NOT NULL,
         text TEXT NOT NULL,
