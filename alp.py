@@ -33,23 +33,16 @@ app = Flask(
     static_folder=static_folder
     )
 
-
 app.secret_key = os.urandom(24)
-
 
 # Intitiate database if not exist
 db_exist = os.path.exists(prm.DB_PATH)
 if not db_exist:
-    db = DatabaseHandler(prm.DB_PATH)
-    db.write_db(prm.SESSION_TABLE_SQL)
-    db.write_db(prm.INTERIM_COLLECTIONS_TABLE_SQL)
-    db.write_db(prm.COLLECTIONS_TABLE_SQL)
-    db.write_db(prm.EMBEDDINGS_TABLE_SQL)
-    db.close_connection()
-else:
-    db = DatabaseHandler(prm.DB_PATH)
-    db.close_connection()
-
+    with DatabaseHandler(prm.DB_PATH) as db:
+        db.write_db(prm.SESSION_TABLE_SQL)
+        db.write_db(prm.INTERIM_COLLECTIONS_TABLE_SQL)
+        db.write_db(prm.COLLECTIONS_TABLE_SQL)
+        db.write_db(prm.EMBEDDINGS_TABLE_SQL)
 
 # Spin up chatbot instance
 chatbot = Chatbot()
@@ -59,17 +52,19 @@ print("!Chatbot initialized")
 # Render home page
 @app.route('/')
 def home():
-    db.create_connection()
-    # Load session names from the database
-    if db.load_session_names() is not None:
-        session_names = [x[0] for x in db.load_session_names()]
-        session_dates = [x[1] for x in db.load_session_names()]
-        # extract from session dates only the date YYYY-MM-DD
-        session_dates = [x.split()[0] for x in session_dates]
-        sessions = list(zip(session_names, session_dates))
-    else:
-        sessions = []
-    db.close_connection()
+
+    db = DatabaseHandler(prm.DB_PATH)
+
+    with db as db_conn:
+        # Load session names from the database
+        if db_conn.load_session_names() is not None:
+            session_names = [x[0] for x in db_conn.load_session_names()]
+            session_dates = [x[1] for x in db_conn.load_session_names()]
+            # extract from session dates only the date YYYY-MM-DD
+            session_dates = [x.split()[0] for x in session_dates]
+            sessions = list(zip(session_names, session_dates))
+        else:
+            sessions = []
 
     return render_template(
         'home.html', 
@@ -82,6 +77,8 @@ def proc_session():
     """Process session
     Set the API key, session name, connect sources for new session.
     """
+
+    db = DatabaseHandler(prm.DB_PATH)
 
     ## Get the data from the form
     # Pass API key right to the openai object
@@ -154,11 +151,11 @@ def proc_session():
         pages_refined_df['uuid'] = [cproc.create_uuid() for x in range(pages_refined_df.shape[0])]  
 
         # Populate session and interim context table
-        db.create_connection(prm.DB_PATH)
+        with db as db_conn:
         # BUG: session table doesnt exist (!?)
-        db.insert_session(session_uuid, session['SESSION_NAME'], session['SESSION_DATE'], session['SESSION_SOURCE'])
-        db.insert_context(pages_refined_df, table_name='interim_collections', if_exist='replace')
-        db.close_connection()
+            db_conn.insert_session(session_uuid, session['SESSION_NAME'], session['SESSION_DATE'], session['SESSION_SOURCE'])
+            db_conn.insert_context(pages_refined_df, table_name='interim_collections', if_exist='replace')
+    
 
         return render_template(
             'summary.html', 
@@ -181,34 +178,35 @@ def start_embedding():
     """Start the embedding process
     """
 
+    db = DatabaseHandler(prm.DB_PATH)
+
     # Load context data from interim table
-    db.create_connection(prm.DB_PATH)
-    pages_refined_df = db.load_context(
-        session['SESSION_NAME'], 
-        table_name='interim_collections'
-        )
+    with db as db_conn:
+        pages_refined_df = db_conn.load_context(
+            session['SESSION_NAME'], 
+            table_name='interim_collections'
+            )
 
-    # Perform the embedding process here
-    print('Embedding process started...')
-    pages_embed_df = cproc.embed_pages(pages_refined_df)
-    print('Embedding process finished.')
-    ## TODO: use vectorstore to store embeddings
-    print('!!!!!', pages_embed_df['embedding'].dtype)
-    pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
-    # Prepare for future functionalities
-    pages_embed_df['edges'] = None
+        # Perform the embedding process here
+        print('Embedding process started...')
+        pages_embed_df = cproc.embed_pages(pages_refined_df)
+        print('Embedding process finished.')
+        ## TODO: use vectorstore to store embeddings
+        print('!!!!!', pages_embed_df['embedding'].dtype)
+        pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
+        # Prepare for future functionalities
+        pages_embed_df['edges'] = None
 
-    ## DMODEL UPDATE
-    ## Decouple context from embeddings
-    ## TODO: implement UUID for context
-    to_serialize_df = pages_embed_df[['session_name', 'embedding']]
-    embed_df = cproc.serialize_embedding(to_serialize_df)
-    print(embed_df.head())
-    #######################
+        ## DMODEL UPDATE
+        ## Decouple context from embeddings
+        ## TODO: implement UUID for context
+        to_serialize_df = pages_embed_df[['session_name', 'embedding']]
+        embed_df = cproc.serialize_embedding(to_serialize_df)
+        print(embed_df.head())
+        #######################
 
-    # insert data with embedding to main context table with if exist = append.
-    db.insert_context(pages_embed_df)
-    db.close_connection()
+        # insert data with embedding to main context table with if exist = append.
+        db_conn.insert_context(pages_embed_df)
 
     # Proceed to the chatbot
     return redirect(url_for('index'))
@@ -218,40 +216,40 @@ def start_embedding():
 def index():
     """render interaction main page"""
 
+    db = DatabaseHandler(prm.DB_PATH)
+
     # Load chat history
-    db.create_connection(prm.DB_PATH)
-    chat_history = db.load_chat_history(session['SESSION_NAME'])
-    db.close_connection()
+    with db as db_conn:
+        chat_history = db_conn.load_chat_history(session['SESSION_NAME'])
+
 
     # Convert the DataFrame to a JSON object
     chat_history_json = chat_history.to_dict(orient='records')
 
-    db.create_connection()
+    with db as db_conn:
     # This assumes unique session names
-    s_uuid, s_name, s_date, s_src = db.query_db(
-        f"SELECT * FROM session WHERE session_name = '{session['SESSION_NAME']}'"
-        )[0]
-    db.close_connection()
+        s_uuid, s_name, s_date, s_src = db_conn.query_db(
+            f"SELECT * FROM session WHERE session_name = '{session['SESSION_NAME']}'"
+            )[0]
     
 
     if chat_history.empty:
         # If chat history is empty it means this is the first interaction
         # we need to insert the baseline exchange   
-        db.create_connection(prm.DB_PATH)
         
-        #insert baseline interaction
-        db.insert_interaction(
-            session['SESSION_NAME'], 
-            'user',
-            prm.SUMMARY_CTXT_USR
-        )
-        db.insert_interaction(
-            session['SESSION_NAME'], 
-            'assistant',
-            prm.SUMMARY_TXT_ASST
-        )
-        db.close_connection()
-
+        with db as db_conn:
+            #insert baseline interaction
+            db_conn.insert_interaction(
+                session['SESSION_NAME'], 
+                'user',
+                prm.SUMMARY_CTXT_USR
+            )
+            db_conn.insert_interaction(
+                session['SESSION_NAME'], 
+                'assistant',
+                prm.SUMMARY_TXT_ASST
+            )
+        
     return render_template(
         'index.html',
         session_name=s_name,
@@ -265,15 +263,18 @@ def index():
 def ask():
     """handle POST request from the form and return the response
     """
+
+    db = DatabaseHandler(prm.DB_PATH)
+
     data = request.get_json()
     question = data['question']
 
     # Handle chat memory and context
     print('Handling chat memory and context...')
-    db.create_connection(prm.DB_PATH)
-    # Get the context table
-    recall_table = db.load_context(session['SESSION_NAME'])
-    db.close_connection()
+    
+    with db as db_conn:
+        # Get the context table
+        recall_table = db_conn.load_context(session['SESSION_NAME'])
     
     ## Chop recall table to only include contexts for sources, user, or assistant
     src_f = (recall_table['interaction_type'] == 'source')
@@ -388,21 +389,20 @@ def ask():
 
     # save it all to DB so the agent can remember the conversation
     session['SPOT_TIME'] = str(int(time.time()))
-    db.create_connection()
-    # Insert user message into DB so we can use it for another user's input
-    db.insert_interaction(
-        session['SESSION_NAME'], 
-        'user',
-        question,
-        timestamp=session['SPOT_TIME']
-    )
-    db.insert_interaction(
-        session['SESSION_NAME'], 
-        'assistant',
-        response['choices'][0]['message']['content'],
-        timestamp=response['created']
-    )
-    db.close_connection()
+    with db as db_conn:
+        # Insert user message into DB so we can use it for another user's input
+        db_conn.insert_interaction(
+            session['SESSION_NAME'], 
+            'user',
+            question,
+            timestamp=session['SPOT_TIME']
+        )
+        db_conn.insert_interaction(
+            session['SESSION_NAME'], 
+            'assistant',
+            response['choices'][0]['message']['content'],
+            timestamp=response['created']
+        )
 
     return jsonify({'response': response})
 
@@ -412,11 +412,13 @@ def export_interactions():
     """Export the interaction table as a JSON file for download.
     """
 
+    db = DatabaseHandler(prm.DB_PATH)
+    
     # Connect to the database
-    db.create_connection()
-    # Retrieve the interaction table
-    recall_df = db.load_context(session['SESSION_NAME'])
-    db.close_connection()
+    with db as db_conn:
+        # Retrieve the interaction table
+        recall_df = db_conn.load_context(session['SESSION_NAME'])
+
     # remove records that are user or assistant interaction type and have 
     # time signature 0 - these were injected into the table as a seed to 
     # improve performance of the model at the beginning of the conversation

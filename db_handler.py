@@ -25,6 +25,17 @@ class DatabaseHandler:
             print(f"Creating a new database file '{db_file}'.")
             self.create_connection(db_file)
 
+    def __enter__(self):
+        """Enter the context manager."""
+        self.create_connection()
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit the context manager."""
+        self.close_connection()
+
+    
+    
 
     def create_connection(self, db_file=None):
         """Create a database connection to the SQLite database specified by db_file attribute."""
