@@ -122,7 +122,7 @@ class DatabaseHandler:
             print(e)
 
 
-    def insert_context(self, context_df, table_name='context', if_exist='append'):
+    def insert_context(self, context_df, table_name='collections', if_exist='append'):
         """Insert context data into the database
         :param context_df: context dataframe
         :return:
@@ -162,7 +162,7 @@ class DatabaseHandler:
 
         message = message.replace('"', '').replace("'", "")
 
-        query = f"INSERT INTO context VALUES ('{uuid}', '{session_name}', '{inter_type}', '{message}', '{num_tokens_oai}', '{page}', '{embedding}', '{edges}','{timestamp}')"
+        query = f"INSERT INTO collections VALUES ('{uuid}', '{session_name}', '{inter_type}', '{message}', '{num_tokens_oai}', '{page}', '{embedding}', '{edges}','{timestamp}')"
 
         try:
             c = self.conn.cursor()
@@ -182,7 +182,7 @@ class DatabaseHandler:
             return False
 
 
-    def load_context(self, session_name, table_name='context') -> pd.DataFrame:
+    def load_context(self, session_name, table_name='collections') -> pd.DataFrame:
         """Load context data from the database to a dataframe
         :param table_name: table name
         :return:
@@ -213,7 +213,7 @@ class DatabaseHandler:
             c = self.conn.cursor()
             # c.execute(f"SELECT * FROM context")
             c.execute(f"""SELECT text, timestamp, interaction_type
-                FROM context
+                FROM collections
                 WHERE
                     SESSION_NAME = ? AND
                     TIMESTAMP != 0 AND
@@ -260,7 +260,7 @@ class DatabaseHandler:
         """
         try:
             c = self.conn.cursor()
-            c.execute(f"DELETE FROM context WHERE SESSION_NAME = '{session_name}'")
+            c.execute(f"DELETE FROM collections WHERE SESSION_NAME = '{session_name}'")
             self.conn.commit()
             print(f"Session: \"{session_name}\" deleted from the database")
             return True

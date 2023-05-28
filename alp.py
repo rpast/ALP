@@ -157,7 +157,7 @@ def proc_session():
         db.create_connection(prm.DB_PATH)
         # BUG: session table doesnt exist (!?)
         db.insert_session(session_uuid, session['SESSION_NAME'], session['SESSION_DATE'], session['SESSION_SOURCE'])
-        db.insert_context(pages_refined_df, table_name='interim_context', if_exist='replace')
+        db.insert_context(pages_refined_df, table_name='interim_collections', if_exist='replace')
         db.close_connection()
 
         return render_template(
@@ -185,7 +185,7 @@ def start_embedding():
     db.create_connection(prm.DB_PATH)
     pages_refined_df = db.load_context(
         session['SESSION_NAME'], 
-        table_name='interim_context'
+        table_name='interim_collections'
         )
 
     # Perform the embedding process here

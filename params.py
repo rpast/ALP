@@ -34,7 +34,7 @@ SUMMARY_TXT_ASST = "When a user asks me to summarize the source material or expl
 # Session name is defined by the user
 
 INTERIM_COLLECTIONS_TABLE_SQL = """
-    CREATE TABLE IF NOT EXISTS interim_context (
+    CREATE TABLE IF NOT EXISTS interim_collections (
         uuid TEXT NOT NULL,
         session_name TEXT NOT NULL,
         interaction_type TEXT NOT NULL,
@@ -44,7 +44,7 @@ INTERIM_COLLECTIONS_TABLE_SQL = """
         )"""
 
 COLLECTIONS_TABLE_SQL = """
-    CREATE TABLE IF NOT EXISTS context (
+    CREATE TABLE IF NOT EXISTS collections (
         uuid TEXT NOT NULL,
         session_name TEXT NOT NULL,
         interaction_type TEXT NOT NULL,
