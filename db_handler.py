@@ -136,13 +136,38 @@ class DatabaseHandler:
             print(e)
 
 
+    def get_context(self, uuid, table_name='collections', limit=None) -> pd.DataFrame:
+        """Get context data from the database
+        :param uuid: uuid
+        :return: context dataframe
+        """
+        try:
+            # if limit not none then return number of rows = limit
+            if limit is not None:
+                query = f"SELECT * FROM {table_name} WHERE uuid = '{uuid}' LIMIT {limit}"
+            else:
+                query = f"SELECT * FROM {table_name} WHERE uuid = '{uuid}'"
+
+            context_df = pd.read_sql_query(query, self.conn)
+
+            return context_df
+        except Exception as e:
+            print(e)
+
+
+
     def insert_context(self, context_df, table_name='collections', if_exist='append'):
         """Insert context data into the database
         :param context_df: context dataframe
         :return:
         """
         try:
-            context_df.to_sql(table_name, self.conn, if_exists=if_exist, index=False)
+            context_df.to_sql(
+                table_name, 
+                self.conn, 
+                if_exists=if_exist, 
+                index=False
+                )
             print (f"Context data inserted into the {table_name} table")
             return True
         except Exception as e:
@@ -152,7 +177,8 @@ class DatabaseHandler:
 
     def insert_interaction(
             self, 
-            session_name, 
+            collection_uuid,
+            session_name,
             inter_type, 
             message, 
             page=None, 
@@ -176,7 +202,7 @@ class DatabaseHandler:
 
         message = message.replace('"', '').replace("'", "")
 
-        query = f"INSERT INTO collections VALUES ('{uuid}', '{session_name}', '{inter_type}', '{message}', '{num_tokens_oai}', '{page}', '{embedding}', '{edges}','{timestamp}')"
+        query = f"INSERT INTO collections VALUES ('{collection_uuid}', '{uuid}', '{session_name}', '{inter_type}', '{message}', '{num_tokens_oai}', '{page}', '{embedding}', '{edges}','{timestamp}')"
 
         try:
             c = self.conn.cursor()

@@ -113,6 +113,7 @@ def proc_session():
     session['SESSION_TIME'] = str(int(time.time()))
     session['SESSION_DATE'] = str(session_date).split()[0]
     session['SESSION_NAME'] = session_name
+    session['UUID'] = cproc.create_uuid()
 
     # New session has specific rules
     if session['NEW_SESSION']:
@@ -123,8 +124,6 @@ def proc_session():
         file_name = cproc.process_name(file_.filename)
         session['SESSION_SOURCE'] = file_name
 
-        # Generate session uuid
-        session_uuid = cproc.create_uuid()
 
         # Save the file to the upload folder
         saved_fname = session['SESSION_NAME'] + '_' + file_name
@@ -147,14 +146,15 @@ def proc_session():
         length_warning = doc_length / 60 > 1
 
         ## DMODEL IMPLEMENTATION
-        # create uuid for the context instances
-        pages_refined_df['uuid'] = [cproc.create_uuid() for x in range(pages_refined_df.shape[0])]  
+        # create uuid for the collection and for each text instance
+        session['COLLECTION_UUID'] = cproc.create_uuid()
+        pages_refined_df['doc_uuid'] = [cproc.create_uuid() for x in range(pages_refined_df.shape[0])] 
+        pages_refined_df['uuid'] = session['COLLECTION_UUID']
 
         # Populate session and interim context table
         with db as db_conn:
-        # BUG: session table doesnt exist (!?)
             db_conn.insert_session(
-                session_uuid,
+                session['UUID'],
                 'collection uuid',
                 'chat uuid',
                 session['SESSION_NAME'], 
@@ -170,7 +170,7 @@ def proc_session():
 
         return render_template(
             'summary.html', 
-            session_uuid=session_uuid,
+            session_uuid=session['UUID'],
             session_name=session_name, 
             embedding_cost=embedding_cost,
             doc_length=doc_length,
@@ -254,11 +254,13 @@ def index():
         with db as db_conn:
             #insert baseline interaction
             db_conn.insert_interaction(
+                session['COLLECTION_UUID'],
                 session['SESSION_NAME'], 
                 'user',
                 prm.SUMMARY_CTXT_USR
             )
             db_conn.insert_interaction(
+                session['COLLECTION_UUID'],
                 session['SESSION_NAME'], 
                 'assistant',
                 prm.SUMMARY_TXT_ASST
@@ -406,12 +408,14 @@ def ask():
     with db as db_conn:
         # Insert user message into DB so we can use it for another user's input
         db_conn.insert_interaction(
+            session['COLLECTION_UUID'],
             session['SESSION_NAME'], 
             'user',
             question,
             timestamp=session['SPOT_TIME']
         )
         db_conn.insert_interaction(
+            session['COLLECTION_UUID'],
             session['SESSION_NAME'], 
             'assistant',
             response['choices'][0]['message']['content'],
