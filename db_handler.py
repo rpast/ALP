@@ -136,6 +136,18 @@ class DatabaseHandler:
             print(e)
 
 
+    def get_session(self, session_uuid):
+        """Fetch session details from database using passed session uuid.
+        """
+        try:
+            query = f"SELECT * FROM sessions WHERE uuid = '{session_uuid}'"
+            self.session_table = pd.read_sql_query(query, self.conn)
+
+            return self.session_table
+        except Exception as e:
+            print(e)
+
+
     def get_context(self, uuid, table_name='collections', limit=None) -> pd.DataFrame:
         """Get context data from the database
         :param uuid: uuid
@@ -177,19 +189,17 @@ class DatabaseHandler:
 
     def insert_interaction(
             self, 
-            collection_uuid,
+            chat_uuid,
             session_name,
             inter_type, 
             message, 
-            page=None, 
-            edges=None, 
+            page=None,
             timestamp=0) -> bool:
         """Insert interaction data into the database's Interaction table.
         :param session_name: session name
         :param inter_type: interaction type
         :param message: interaction message
         :param page: page number
-        :param edges: edges
         :param timestamp: timestamp
         :return:
         """
@@ -202,7 +212,20 @@ class DatabaseHandler:
 
         message = message.replace('"', '').replace("'", "")
 
-        query = f"INSERT INTO collections VALUES ('{collection_uuid}', '{uuid}', '{session_name}', '{inter_type}', '{message}', '{num_tokens_oai}', '{page}', '{embedding}', '{edges}','{timestamp}')"
+        query = f"""
+            INSERT INTO chat_history 
+            VALUES (
+                '{chat_uuid}', 
+                '{uuid}', 
+                '{session_name}', 
+                '{inter_type}', 
+                '{message}', 
+                '{num_tokens_oai}', 
+                '{page}', 
+                '{embedding}',
+                '{timestamp}'
+                )
+            """
 
         try:
             c = self.conn.cursor()
@@ -222,7 +245,7 @@ class DatabaseHandler:
             return False
 
 
-    def load_context(self, session_name, table_name='collections') -> pd.DataFrame:
+    def load_context(self, f, table_name='collections') -> pd.DataFrame:
         """Load context data from the database to a dataframe
         :param table_name: table name
         :return:

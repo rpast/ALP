@@ -33,6 +33,7 @@ SUMMARY_TXT_ASST = "When a user asks me to summarize the source material or expl
 ## SQL parameters ##
 # Session name is defined by the user
 
+# TODO: session_source not needed
 SESSION_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS session (
     
@@ -40,23 +41,23 @@ SESSION_TABLE_SQL = """
         collection_uuid TEXT NOT NULL,
         chat_uuid TEXT NOT NULL,
     
-        session_name TEXT NOT NULL,
+        name TEXT NOT NULL,
         session_date TEXT NOT NULL,
         session_source TEXT NOT NULL
         )"""
 
-INTERIM_COLLECTIONS_TABLE_SQL = """
-    CREATE TABLE IF NOT EXISTS interim_collections (
+# INTERIM_COLLECTIONS_TABLE_SQL = """
+#     CREATE TABLE IF NOT EXISTS interim_collections (
     
-        uuid TEXT NOT NULL,
-        doc_uuid TEXT NOT NULL,
+#         uuid TEXT NOT NULL,
+#         doc_uuid TEXT NOT NULL,
     
-        session_name TEXT NOT NULL,
-        interaction_type TEXT NOT NULL,
-        text TEXT NOT NULL,
-        text_token_no INTEGER,
-        page INTEGER
-        )"""
+#         session_name TEXT NOT NULL,
+#         interaction_type TEXT NOT NULL,
+#         text TEXT NOT NULL,
+#         text_token_no INTEGER,
+#         page INTEGER
+#         )"""
 
 COLLECTIONS_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS collections (
@@ -64,17 +65,17 @@ COLLECTIONS_TABLE_SQL = """
         uuid TEXT NOT NULL,
         doc_uuid TEXT NOT NULL,
 
-        session_name TEXT NOT NULL,
+        name TEXT NOT NULL,
         interaction_type TEXT NOT NULL,
         text TEXT NOT NULL,
         text_token_no INTEGER,
         page INTEGER,
-        embedding TEXT NOT NULL,
-        edges TEXT,
+        embedding TEXT NOT NULL
         timestamp INTEGER
         )"""
 
-CHAT_HIST_TABLE = """
+# This doesnt need a session_name
+CHAT_HIST_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS chat_history (
     
         uuid TEXT NOT NULL,
@@ -84,6 +85,7 @@ CHAT_HIST_TABLE = """
         interaction_type TEXT NOT NULL,
         text TEXT NOT NULL,
         text_token_no INTEGER,
+        page INTEGER,
         embedding BLOB NOT NULL,
         timestamp INTEGER
         )"""

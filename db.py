@@ -15,4 +15,4 @@ tables = c.fetchall()
 session_df = pd.read_sql_query("SELECT * FROM session", conn)
 
 # read context table with pandas
-context_df = pd.read_sql_query("SELECT * FROM collections", conn)
+collections_df = pd.read_sql_query("SELECT * FROM collections", conn)

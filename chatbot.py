@@ -2,6 +2,7 @@
 """
 
 import openai
+import pandas as pd
 
 class Chatbot:
     def __init__(self):
@@ -40,3 +41,26 @@ class Chatbot:
         )
 
         return api_response
+    
+
+# Create Session class that handles separate colelctions and chat history.
+class Session:
+    """Manages Session state
+    """
+
+    def __init__(self, session_table) -> None:
+
+        # TODO: test if ~collection_uuid are unique
+        self.session_uuid = session_table['uuid'].unique()[0]
+        self.collection_uuid = session_table['collection_uuid'].unique().tolist()
+        self.chat_uuid = session_table['chat_uuid'].unique()[0]
+        self.session_name = session_table['session_name'].unique()[0]
+        self.session_date = session_table['session_date'].unique()[0]
+    
+    def __repr__(self) -> str:
+        return f"""
+            Session: {self.session_name} ({self.session_uuid}); 
+            Date: {self.session_date}; 
+            Collections: {self.collection_uuid}; 
+            Chat: {self.chat_uuid}
+            """

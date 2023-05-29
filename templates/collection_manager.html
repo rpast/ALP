@@ -23,44 +23,38 @@
 
         <div class="card"> <!-- Card is a basic UI object -->
             <div class="card-header">
-                <span>ALP - hub</span>
+                <span>ALP - Collections manager</span>
             </div>
             
             <div class="container-menu">
                 <div class="content">
-                    <form action="/collection_manager" method="post" enctype="multipart/form-data" class="form-container">
+                    
+                    <form action="/process_collection" method="post" enctype="multipart/form-data" class="form-container">
                         <div class="form-group">
-                            <label for="collection_manager">Manage collections</label>
-                            <input type="submit" id="collection_manager" value="Collections">
+                            <label for="collection_name">Collection name:</label>
+                            <input type="text" id="collection_name" name="collection_name">
+                            <label for="pdf">Select pdf:</label>
+                            <input type="file" name="pdf" accept=".pdf">
                         </div>
-                    </form>
-                
-                    <form action="/session_manager" method="post" enctype="multipart/form-data" class="form-container">
+
                         <div class="form-group">
-                            <label for="session_manager">Launch a session</label>
-                            <input type="submit" id="session_manager" value="Sessions">
+                            <input type="submit" id="collection_proc" value="Submit">
+                            <input type="button" value="<< Home" onclick="window.location.href='http://localhost:5000/'">
                         </div>
+
                     </form>
+
                 </div>
-                
 
                 <div class="right-side">
-                    <p>
-                        ALP is a knowledge-grounded conversational AI system.
-                    </p>
-                    <p>
-                        The system is designed to enhance the accuracy of responses of GPT-3.5 model related to a specific PDF document by using a retrieval augmentation technique. 
-                    </p>
-                    <p>
-                        You will need Open AI API key to use the system. You can get it <a href="https://platform.openai.com/" target="_blank">here</a>. Note that since ALP operates as local server your key is safe.
-                    </p>
+                    <p>Upload a pdf to a new collection.</p>
                     <p id="conditional-text" style="color: #16b4a2">(ﾉ☉ヮ⚆)ﾉ ⌒*:･ﾟ✧</p>
                 </div>
 
             </div>
+
         </div>
 
     </div>
 </body>
 </html>
-

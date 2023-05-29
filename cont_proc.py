@@ -89,7 +89,7 @@ def split_contents(x):
     return [x['contents'][i:i+thres] for i in range(0, len(x['contents']), thres)]
 
 
-def split_pages(pages_df, session_name):
+def split_pages(pages_df, collection_name):
     """Split pages that are too long for the model
     prepare the contents to be embedded
     """
@@ -125,10 +125,10 @@ def split_pages(pages_df, session_name):
         .drop(columns=['contents_split']) # Drop contents_split column
         .reset_index() # Reset index so chapter names are stored in columns
         .rename(columns={'index': 'page', 'num_tokens_oai': 'text_token_no'}) # Rename index column to chapter
-        .assign(session_name=session_name) # Add session_name column
+        .assign(name=collection_name) # Add session_name column
         .assign(interaction_type='source') ## Add interaction type column
         .assign(timestamp=0) # Add timestamp column
-        [['session_name', 'interaction_type', 'text', 'text_token_no', 'page', 'timestamp']]
+        [['name', 'interaction_type', 'text', 'text_token_no', 'page', 'timestamp']]
         )
 
     return pages_contents_long_df

@@ -4,6 +4,7 @@ import re
 import time
 import openai
 import datetime
+import pandas as pd
 
 from flask import Flask, request, session, render_template, redirect, url_for, jsonify, send_file
 from langchain.document_loaders import PyPDFLoader
@@ -35,13 +36,20 @@ app = Flask(
 
 app.secret_key = os.urandom(24)
 
+## Load key from api_key.txt THIS IS FOR DEV ONLY
+with open('/home/nf/Documents/projekty/ai_apps/ALP/ALP/static/data/api_key.txt') as f:
+    key_ = f.read()
+    openai.api_key = key_
+
+
 # Intitiate database if not exist
 db_exist = os.path.exists(prm.DB_PATH)
 if not db_exist:
     with DatabaseHandler(prm.DB_PATH) as db:
         db.write_db(prm.SESSION_TABLE_SQL)
-        db.write_db(prm.INTERIM_COLLECTIONS_TABLE_SQL)
+        # db.write_db(prm.INTERIM_COLLECTIONS_TABLE_SQL)
         db.write_db(prm.COLLECTIONS_TABLE_SQL)
+        db.write_db(prm.CHAT_HIST_TABLE_SQL)
         db.write_db(prm.EMBEDDINGS_TABLE_SQL)
 
 # Spin up chatbot instance
@@ -67,10 +75,161 @@ def home():
             sessions = []
 
     return render_template(
-        'home.html', 
-        session_names=sessions
+        'home.html'
         )
 
+@app.route('/collection_manager', methods=['GET', 'POST'])
+def collection_manager():
+    # TODO: fetch collections from database and pass them so they can be displayed
+    return render_template(
+            'collection_manager.html'
+            )
+
+# create /process_collection route
+@app.route('/process_collection', methods=['POST'])
+def process_collection():
+    """Process collection
+    Process the collection of documents.
+    """
+    print("!Processing collection")
+    db = DatabaseHandler(prm.DB_PATH)
+
+    # Get the data from the form
+    collection_name = request.form['collection_name']
+    collection_name = cproc.process_name(collection_name)
+    print(f"!Collection name: {collection_name}")
+
+    # Process the collection
+    file_ = request.files['pdf']
+    file_name = cproc.process_name(file_.filename)
+    collection_source = file_name
+    print(f"!Collection source: {collection_source}")
+
+    # Save the file to the upload folder
+    saved_fname = collection_name + '_' + file_name
+    fpath = os.path.join(prm.UPLOAD_FOLDER, saved_fname)
+    file_.save(fpath)
+    print(f"!File saved to: {fpath}")
+
+    # Load the pdf & process the text
+    loader = PyPDFLoader(fpath) # langchain simple pdf loader
+    pages = loader.load_and_split() # split by pages
+
+    # Process text data further so it fits the context mechanism
+    pages_df = cproc.pages_to_dataframe(pages)
+    pages_refined_df = cproc.split_pages(pages_df, collection_name)
+
+    # Add UUIDs to the dataframe!
+    pages_refined_df['uuid'] = cproc.create_uuid()
+    pages_refined_df['doc_uuid'] = [cproc.create_uuid() for x in range(pages_refined_df.shape[0])]
+
+    print('!pages_refined_df columns:')
+    print(f'{pages_refined_df.columns}')
+
+
+    # TODO: Switch to Hugging Face API with embedding model
+    # Get the embedding cost
+    embedding_cost = round(cproc.embed_cost(pages_refined_df),4)
+    # express embedding cost in dollars
+    embedding_cost = f"${embedding_cost}"
+    doc_length = pages_refined_df.shape[0]
+    length_warning = doc_length / 60 > 1
+    print(f"!Embedding cost: {embedding_cost}")
+
+    if length_warning != True:
+        # Perform the embedding process here
+        print('Embedding process started...')
+        pages_embed_df = cproc.embed_pages(pages_refined_df)
+        print('Embedding process finished.')
+        ## TODO: use vectorstore to store embeddings
+        print('!!!!!', pages_embed_df['embedding'].dtype)
+        pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
+
+        ## DMODEL UPDATE
+        ## Decouple context from embeddings
+        ## TODO: implement UUID for context
+        to_serialize_df = pages_embed_df[['name', 'embedding']]
+        embed_df = cproc.serialize_embedding(to_serialize_df)
+        print(embed_df.head())
+        #######################
+
+        # insert data with embedding to main context table with if exist = append.
+        with db as db_conn:
+            db_conn.insert_context(pages_embed_df)
+        
+        print('!Embedding process finished. Collection saved to database.')
+        
+    return render_template(
+            'collection_manager.html'
+            )
+
+# Create /session_manager route
+@app.route('/session_manager', methods=['GET', 'POST'])
+def session_manager():
+    """Session manager
+    Manage sessions.
+    """
+    db = DatabaseHandler(prm.DB_PATH)
+
+    # Load session names from the database
+    with db as db_conn:
+        if db_conn.load_session_names() is not None:
+            session_names = [x[0] for x in db_conn.load_session_names()]
+            session_dates = [x[1] for x in db_conn.load_session_names()]
+            # extract from session dates only the date YYYY-MM-DD
+            session_dates = [x.split()[0] for x in session_dates]
+            sessions = list(zip(session_names, session_dates))
+        else:
+            sessions = []
+        
+        # TODO: make a method out of that
+        subs = ['name','uuid']
+        collections_table = pd.read_sql('SELECT * FROM collections', db_conn.conn)[subs]
+        collections = collections_table.drop_duplicates(subset=subs)
+        # return list of tuples from collections
+        collections = [tuple(x) for x in collections.values]
+        print(collections)
+
+    return render_template(
+            'session_manager.html',
+            sessions=sessions,
+            collections=collections
+            )
+
+#Create /process_session
+@app.route('/process_session', methods=['POST'])
+def process_session():
+    """Process session
+    Set the API key, session name, connect sources for new session.
+    """
+
+    db = DatabaseHandler(prm.DB_PATH)
+
+    ## Get the data from the form
+    # Pass API key right to the openai object
+    # openai.api_key = request.form['api_key']
+
+
+    #determine if use clicked session_create or session_start
+    session_action = request.form.get('session_action', 0)
+
+
+    # Determine if we deal with new or existing session
+    if session_action == 'Create':
+        session_name = request.form.get('new_session_name', 0)
+    elif session_action == 'Start':
+        session_name = request.form.get('existing_session_name', 0)
+
+    print('session name', session_name)
+
+    # grab collections from the form
+    collections = request.form.getlist('collections')
+
+    print('collections', collections)
+
+    return render_template(
+            'home.html'
+    )
 
 @app.route('/proc_session', methods=['POST'])
 def proc_session():
@@ -114,6 +273,7 @@ def proc_session():
     session['SESSION_DATE'] = str(session_date).split()[0]
     session['SESSION_NAME'] = session_name
     session['UUID'] = cproc.create_uuid()
+
 
     # New session has specific rules
     if session['NEW_SESSION']:
@@ -184,49 +344,48 @@ def proc_session():
             url_for('index'))
 
 
-@app.route('/start_embedding', methods=['POST'])
-def start_embedding():
-    """Start the embedding process
-    """
+# @app.route('/start_embedding', methods=['POST'])
+# def start_embedding():
+#     """Start the embedding process
+#     """
 
-    db = DatabaseHandler(prm.DB_PATH)
+#     db = DatabaseHandler(prm.DB_PATH)
 
-    # Load context data from interim table
-    with db as db_conn:
-        pages_refined_df = db_conn.load_context(
-            session['SESSION_NAME'], 
-            table_name='interim_collections'
-            )
+#     # Load context data from interim table
+#     with db as db_conn:
+#         pages_refined_df = db_conn.load_context(
+#             session['SESSION_NAME'], 
+#             table_name='interim_collections'
+#             )
 
-        # Perform the embedding process here
-        print('Embedding process started...')
-        pages_embed_df = cproc.embed_pages(pages_refined_df)
-        print('Embedding process finished.')
-        ## TODO: use vectorstore to store embeddings
-        print('!!!!!', pages_embed_df['embedding'].dtype)
-        pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
-        # Prepare for future functionalities
-        pages_embed_df['edges'] = None
+#         # Perform the embedding process here
+#         print('Embedding process started...')
+#         pages_embed_df = cproc.embed_pages(pages_refined_df)
+#         print('Embedding process finished.')
+#         ## TODO: use vectorstore to store embeddings
+#         print('!!!!!', pages_embed_df['embedding'].dtype)
+#         pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
 
-        ## DMODEL UPDATE
-        ## Decouple context from embeddings
-        ## TODO: implement UUID for context
-        to_serialize_df = pages_embed_df[['session_name', 'embedding']]
-        embed_df = cproc.serialize_embedding(to_serialize_df)
-        print(embed_df.head())
-        #######################
+#         ## DMODEL UPDATE
+#         ## Decouple context from embeddings
+#         ## TODO: implement UUID for context
+#         to_serialize_df = pages_embed_df[['session_name', 'embedding']]
+#         embed_df = cproc.serialize_embedding(to_serialize_df)
+#         print(embed_df.head())
+#         #######################
 
-        # insert data with embedding to main context table with if exist = append.
-        db_conn.insert_context(pages_embed_df)
+#         # insert data with embedding to main context table with if exist = append.
+#         db_conn.insert_context(pages_embed_df)
 
-    # Proceed to the chatbot
-    return redirect(url_for('index'))
+#     # Proceed to the chatbot
+#     return redirect(url_for('index'))
 
 
 @app.route('/interaction')
 def index():
     """render interaction main page"""
 
+    session['CHAT_UUID'] = cproc.create_uuid()
     db = DatabaseHandler(prm.DB_PATH)
 
     # Load chat history
@@ -254,13 +413,13 @@ def index():
         with db as db_conn:
             #insert baseline interaction
             db_conn.insert_interaction(
-                session['COLLECTION_UUID'],
+                session['CHAT_UUID'],
                 session['SESSION_NAME'], 
                 'user',
                 prm.SUMMARY_CTXT_USR
             )
             db_conn.insert_interaction(
-                session['COLLECTION_UUID'],
+                session['CHAT_UUID'],
                 session['SESSION_NAME'], 
                 'assistant',
                 prm.SUMMARY_TXT_ASST
@@ -408,14 +567,14 @@ def ask():
     with db as db_conn:
         # Insert user message into DB so we can use it for another user's input
         db_conn.insert_interaction(
-            session['COLLECTION_UUID'],
+            session['CHAT_UUID'],
             session['SESSION_NAME'], 
             'user',
             question,
             timestamp=session['SPOT_TIME']
         )
         db_conn.insert_interaction(
-            session['COLLECTION_UUID'],
+            session['CHAT_UUID'],
             session['SESSION_NAME'], 
             'assistant',
             response['choices'][0]['message']['content'],
