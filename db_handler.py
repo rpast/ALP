@@ -103,7 +103,7 @@ class DatabaseHandler:
 
 
     # TODO: use high performance library for writing pandas dataframes to sqlite
-    def insert_session(self, uuid, col_uuid, chat_uuid, sname, sdate, ssource) -> bool:
+    def insert_session(self, uuid, col_uuid, sname, sdate) -> bool:
         """Insert session data into the database's Sessions table.
         :param sname: session name
         :param sdate: session date
@@ -111,21 +111,10 @@ class DatabaseHandler:
         """
         try:
             c = self.conn.cursor()
-            # if session name already in the session table, then don't insert and return info
-            c.execute(f"SELECT * FROM session WHERE session_name = '{sname}'")
-            if c.fetchall():
-                print(f"Session: \"{sname}\" already in the database")
-                return False
-            
-            # TODO: use dedicated python library for string validation
-            if sname.find('-') == '-1':
-                print("Session name cannot contain \"-\",\"!\",\"?\",\".\" characters")
-                return False
-            
             
             c.execute(f"""
                 INSERT INTO session 
-                VALUES ('{uuid}', '{col_uuid}', '{chat_uuid}', '{sname}', '{sdate}', '{ssource}')
+                VALUES ('{uuid}', '{col_uuid}', '{sname}', '{sdate}')
                 """)
             self.conn.commit()
 
@@ -267,7 +256,7 @@ class DatabaseHandler:
             return None
         
 
-    def load_chat_history(self, session) -> pd.DataFrame:
+    def load_chat_history(self, session_id) -> pd.DataFrame:
         """Load chat history from the database to a dataframe
         :param session: session name
         :return:
@@ -276,12 +265,11 @@ class DatabaseHandler:
             c = self.conn.cursor()
             # c.execute(f"SELECT * FROM context")
             c.execute(f"""SELECT text, timestamp, interaction_type
-                FROM collections
+                FROM chat_history
                 WHERE
-                    SESSION_NAME = ? AND
-                    TIMESTAMP != 0 AND
-                    INTERACTION_TYPE IN ('user', 'assistant')
-                """, (session,))
+                    UUID = ? AND
+                    TIMESTAMP != 0
+                """, (session_id,))
             print([desc[0] for desc in c.description])
             colnames = [desc[0] for desc in c.description]
             data = c.fetchall()
@@ -305,7 +293,7 @@ class DatabaseHandler:
         """
         try:
             c = self.conn.cursor()
-            c.execute(f"SELECT DISTINCT session_name, session_date FROM {table_name}")
+            c.execute(f"SELECT DISTINCT name, uuid, date FROM {table_name}")
             data = c.fetchall()
             return data
         

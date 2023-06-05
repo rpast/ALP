@@ -35,8 +35,8 @@
                             <label for="existing_session">Select existing session:</label>
                             <select id="existing_session" name="existing_session_name">
                                 <option value="" selected>Session name</option>
-                                {% for session_name in session_names %}
-                                <option value="{{ session_name }}">{{ session_name }}</option>
+                                {% for session in sessions %}
+                                <option value="{{ session }}">{{ session }}</option>
                                 {% endfor %}
                             </select>
                             <input type="submit" name="session_action" id="session_start" value="Start">

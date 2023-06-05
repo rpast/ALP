@@ -27,9 +27,9 @@ document.addEventListener("DOMContentLoaded", function () {
     //Update text according to the condition set
     function updateConditionalText() {
         if (existingSession.value) {
-            conditionalText.innerText = "You will continue a conversation with ALP. Hit 'Start Session' to continue.";
+            conditionalText.innerText = "You will continue a conversation with ALP. Hit 'Start' to continue.";
         } else if (newSessionName.value) {
-            conditionalText.innerText = "You will set a new session. Please select a .pdf file for upload and click 'Session Start'.";
+            conditionalText.innerText = "You will create a new session. Please select a .pdf file for upload and click 'Create'.";
         } else {
             conditionalText.innerText = "(ﾉ☉ヮ⚆)ﾉ ⌒*:･ﾟ✧";
         }

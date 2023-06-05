@@ -39,11 +39,9 @@ SESSION_TABLE_SQL = """
     
         uuid TEXT NOT NULL,
         collection_uuid TEXT NOT NULL,
-        chat_uuid TEXT NOT NULL,
     
         name TEXT NOT NULL,
-        session_date TEXT NOT NULL,
-        session_source TEXT NOT NULL
+        date TEXT NOT NULL
         )"""
 
 # INTERIM_COLLECTIONS_TABLE_SQL = """
@@ -70,7 +68,7 @@ COLLECTIONS_TABLE_SQL = """
         text TEXT NOT NULL,
         text_token_no INTEGER,
         page INTEGER,
-        embedding TEXT NOT NULL
+        embedding TEXT NOT NULL,
         timestamp INTEGER
         )"""
 
@@ -80,8 +78,7 @@ CHAT_HIST_TABLE_SQL = """
     
         uuid TEXT NOT NULL,
         doc_uuid TEXT NOT NULL,
-    
-        session_name TEXT NOT NULL,
+
         interaction_type TEXT NOT NULL,
         text TEXT NOT NULL,
         text_token_no INTEGER,
