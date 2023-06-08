@@ -111,9 +111,6 @@ def process_collection():
     pages_refined_df['uuid'] = cproc.create_uuid()
     pages_refined_df['doc_uuid'] = [cproc.create_uuid() for x in range(pages_refined_df.shape[0])]
 
-    print('!pages_refined_df columns:')
-    print(f'{pages_refined_df.columns}')
-
 
     # TODO: Switch to Hugging Face API with embedding model
     # Get the embedding cost
@@ -130,7 +127,6 @@ def process_collection():
         pages_embed_df = cproc.embed_pages(pages_refined_df)
         print('Embedding process finished.')
         ## TODO: use vectorstore to store embeddings
-        print('!!!!!', pages_embed_df['embedding'].dtype)
         pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
 
         ## DMODEL UPDATE
@@ -138,7 +134,6 @@ def process_collection():
         ## TODO: implement UUID for context
         to_serialize_df = pages_embed_df[['name', 'embedding']]
         embed_df = cproc.serialize_embedding(to_serialize_df)
-        print(embed_df.head())
         #######################
 
         # insert data with embedding to main context table with if exist = append.
@@ -172,8 +167,6 @@ def session_manager():
             sessions = list(zip(session_names, session_ids))
         else:
             sessions = []
-
-        print(session_names)
         
         # We want to see available collections
         # TODO: make a method out of that
@@ -182,7 +175,6 @@ def session_manager():
         collections = collections_table.drop_duplicates(subset=subs)
         # return list of tuples from collections
         collections = [tuple(x) for x in collections.values]
-        print(collections)
 
     return render_template(
             'session_manager.html',
@@ -210,12 +202,19 @@ def process_session():
     session_action = request.form.get('session_action', 0)
 
     # Determine if we deal with new or existing session
+    # And handle session variables accordingly
     if session_action == 'Create':
         session_name = request.form.get('new_session_name', 0)
+
         session['SESSION_NAME'] = cproc.process_name(session_name)
+
     elif session_action == 'Start':
-        session_name = request.form.get('existing_session_name', 0)
-        session['SESSION_NAME'] = cproc.process_name(session_name)
+        name_grabbed = request.form.getlist('existing_session_name')
+        sesion_id = [ast.literal_eval(x)[1] for x in name_grabbed][0]
+        name = [ast.literal_eval(x)[0] for x in name_grabbed][0]
+        print('Starting existing session: ', name)
+        session['SESSION_NAME'] = name
+        session['UUID'] = sesion_id
 
 
     if session_action == 'Create':
@@ -236,6 +235,7 @@ def process_session():
         return redirect(
             url_for('index'))
     
+
     elif session_action == 'Start':
         print('Starting existing: ', session['SESSION_NAME'])
         # proceed to interaction
@@ -255,21 +255,11 @@ def index():
 
     # Load chat history
     with db as db_conn:
-        chat_history = db_conn.load_chat_history(session['SESSION_NAME'])
+        chat_history = db_conn.load_context(
+            [session['UUID']], 
+            table_name='chat_history'
+            )
 
-
-    # Convert the DataFrame to a JSON object
-    chat_history_json = chat_history.to_dict(orient='records')
-
-    # with db as db_conn:
-    # # This assumes unique session names
-    #     s_name, s_date, s_src = db_conn.query_db(
-    #         f"""
-    #         SELECT name, date, uuid 
-    #         FROM session WHERE uuid = '{session['UUID']}'
-    #         """
-    #         )[0]
-    
 
     if chat_history.empty:
         # If chat history is empty it means this is the first interaction
@@ -279,16 +269,17 @@ def index():
             #insert baseline interaction
             db_conn.insert_interaction(
                 session['UUID'],
-                session['SESSION_NAME'], 
                 'user',
                 prm.SUMMARY_CTXT_USR
             )
             db_conn.insert_interaction(
                 session['UUID'],
-                session['SESSION_NAME'], 
                 'assistant',
                 prm.SUMMARY_TXT_ASST
             )
+
+    # Convert the DataFrame to a JSON object
+    chat_history_json = chat_history.to_dict(orient='records')
         
     return render_template(
         'index.html',
@@ -312,23 +303,28 @@ def ask():
     print('Handling chat memory and context...')
     
     with db as db_conn:
-        # Get the context table
-        recall_table = db_conn.load_context(session['SESSION_NAME'])
+        # Form recall tables
+        collections = db_conn.load_collections(session['UUID'])
+        recall_table_context = db_conn.load_context(collections)
+        recall_table_chat = db_conn.load_context([session['UUID']], table_name='chat_history')
     
+
     ## Chop recall table to only include contexts for sources, user, or assistant
-    src_f = (recall_table['interaction_type'] == 'source')
-    usr_f = (recall_table['interaction_type'] == 'user') & (recall_table['timestamp']!=0)
-    ast_f = (recall_table['interaction_type'] == 'assistant') & (recall_table['timestamp']!=0)
+    # src_f = (recall_table['interaction_type'] == 'source')
+    usr_f = (recall_table_chat['interaction_type'] == 'user') & (recall_table_chat['timestamp']!=0)
+    ast_f = (recall_table_chat['interaction_type'] == 'assistant') & (recall_table_chat['timestamp']!=0)
     
-    recall_table_source = recall_table[src_f]
-    recall_table_user = recall_table[usr_f]
-    recall_table_assistant = recall_table[ast_f]
+    # recall_table_source = recall_table[src_f]
+    recall_table_source = recall_table_context
+    recall_table_user = recall_table_chat[usr_f]
+    recall_table_assistant = recall_table_chat[ast_f]
 
     # TODO: make a function in cproc out of that!!!
     recal_embed_source = cproc.convert_table_to_dct(recall_table_source)
     recal_embed_user = cproc.convert_table_to_dct(recall_table_user)
     recal_embed_assistant = cproc.convert_table_to_dct(recall_table_assistant)
 
+    # TODO: this should be a chatbot method
     ## Get the context from recall table that is the most similar to user input
     num_samples = prm.NUM_SAMPLES # <- this defines how many samples we want to get from the source material
     if recall_table_source.shape[0] < prm.NUM_SAMPLES:
@@ -347,28 +343,28 @@ def ask():
         if len(recal_source_id)>1:
             # If recal source id is a list n>1, join the text from the list
             idxs = [x[1] for x in recal_source_id]
-            recal_source = recall_table.loc[idxs]['text'].to_list()
+            recal_source = recall_table_context.loc[idxs]['text'].to_list()
             recal_source = '| '.join(recal_source)
         else: 
             # Otherwise just get the text from the single index
             idxs = recal_source_id[1]
-            recal_source = recall_table.loc[idxs]['text']
+            recal_source = recall_table_context.loc[idxs]['text']
 
     ## GET QRY context
     # We get most relevant context from the user's previous messages here
     if len(recal_embed_user) == 0:
-        recal_user = 'No context found'
+        recal_user = 'No context found in user chat history'
     else:
         recal_user_id = oai.order_document_sections_by_query_similarity(question, recal_embed_user)[0][1]
-        recal_user = recall_table.loc[recal_user_id]['text']
+        recal_user = recall_table_chat.loc[recal_user_id]['text']
 
     ## GET RPL context
     # We get most relevant context from the agent's previous messages here
     if len(recal_embed_assistant) == 0:
-        recal_agent = 'No context found'
+        recal_agent = 'No context found agent chat history'
     else:
         recal_agent_id = oai.order_document_sections_by_query_similarity(question, recal_embed_assistant)[0][1]
-        recal_agent = recall_table.loc[recal_agent_id]['text']
+        recal_agent = recall_table_chat.loc[recal_agent_id]['text']
 
 
     # Look for agent and user messages in the interaction table that have the latest timestamp
@@ -391,13 +387,14 @@ def ask():
     ## It will become handy when user wants to know from which chapter the context was taken
 
     if len(idxs)>1:
-        recall_source_pages = recall_table.loc[idxs]['page'].to_list()
+        recall_source_pages = recall_table_context.loc[idxs]['page'].to_list()
     elif len(idxs)==1:
-        recall_source_pages = recall_table.loc[idxs]['page']
+        recall_source_pages = recall_table_context.loc[idxs]['page']
     else:
         recall_source_pages = 'No context found'
 
     print(f'I will answer your question basing on the following context: {set(recall_source_pages)}')
+
 
     # Build prompt
     message = chatbot.build_prompt(
@@ -409,6 +406,7 @@ def ask():
         question
         )
     print("!Prompt built")
+
 
     # Grab call user content from messages alias
     usr_message_content = message[0]['content']
@@ -431,15 +429,13 @@ def ask():
     with db as db_conn:
         # Insert user message into DB so we can use it for another user's input
         db_conn.insert_interaction(
-            session['CHAT_UUID'],
-            session['SESSION_NAME'], 
+            session['UUID'],
             'user',
             question,
             timestamp=session['SPOT_TIME']
         )
         db_conn.insert_interaction(
-            session['CHAT_UUID'],
-            session['SESSION_NAME'], 
+            session['UUID'],
             'assistant',
             response['choices'][0]['message']['content'],
             timestamp=response['created']
@@ -458,7 +454,7 @@ def export_interactions():
     # Connect to the database
     with db as db_conn:
         # Retrieve the interaction table
-        recall_df = db_conn.load_context(session['SESSION_NAME'])
+        recall_df = db_conn.load_context(session['UUID'], table_name='chat_history')
 
     # remove records that are user or assistant interaction type and have 
     # time signature 0 - these were injected into the table as a seed to 
