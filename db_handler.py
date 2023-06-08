@@ -237,6 +237,11 @@ class DatabaseHandler:
         :return:
         """
 
+        # if session_uuid is not a list, turn it into a list
+        if not isinstance(session_uuid, list):
+            session_uuid = [session_uuid]
+
+        # Prepare placeholders for the query
         placeholders = ', '.join('?' for _ in session_uuid)
 
         try:

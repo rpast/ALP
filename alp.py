@@ -245,28 +245,23 @@ def process_session():
 
 @app.route('/interaction')
 def index():
-    """render interaction main page"""
-    
-    ## DOING
-    ## Use UUIDs instead of names
-    ## Check what is wrong with chat history seed in if chat_history.empty
+    """render interaction main page
+    """
 
     db = DatabaseHandler(prm.DB_PATH)
 
     # Load chat history
     with db as db_conn:
         chat_history = db_conn.load_context(
-            [session['UUID']], 
+            session['UUID'], 
             table_name='chat_history'
             )
 
-
-    if chat_history.empty:
-        # If chat history is empty it means this is the first interaction
-        # we need to insert the baseline exchange   
-        
+    # If chat history is empty it means this is the first interaction
+    # we need to insert the baseline exchange   
+    if chat_history.empty:    
+        #insert baseline interaction
         with db as db_conn:
-            #insert baseline interaction
             db_conn.insert_interaction(
                 session['UUID'],
                 'user',
@@ -277,14 +272,18 @@ def index():
                 'assistant',
                 prm.SUMMARY_TXT_ASST
             )
+    else:
+        # Remove seed interactions from the chat history
+        chat_history = chat_history[chat_history['timestamp'] != 0]
 
-    # Convert the DataFrame to a JSON object
+    # Convert the DataFrame to a JSON object so we can pass it to the template
     chat_history_json = chat_history.to_dict(orient='records')
-        
+
     return render_template(
         'index.html',
         session_name=session['SESSION_NAME'],
         session_date=session['SESSION_DATE'],
+        session_uuid=session['UUID'],
         chat_history=chat_history_json
         )
 
@@ -306,7 +305,7 @@ def ask():
         # Form recall tables
         collections = db_conn.load_collections(session['UUID'])
         recall_table_context = db_conn.load_context(collections)
-        recall_table_chat = db_conn.load_context([session['UUID']], table_name='chat_history')
+        recall_table_chat = db_conn.load_context(session['UUID'], table_name='chat_history')
     
 
     ## Chop recall table to only include contexts for sources, user, or assistant
@@ -478,159 +477,6 @@ def export_interactions():
         as_attachment=True, 
         download_name=f"interactions_{session['SESSION_NAME']}.json", 
         mimetype='application/json')
-
-
-# This rout is obsolete
-# @app.route('/proc_session', methods=['POST'])
-# def proc_session():
-#     """Process session
-#     Set the API key, session name, connect sources for new session.
-#     """
-
-#     db = DatabaseHandler(prm.DB_PATH)
-
-#     ## Get the data from the form
-#     # Pass API key right to the openai object
-#     # openai.api_key = request.form['api_key']
-
-#     ## Load key from api_key.txt
-#     with open('/home/nf/Documents/projekty/ai_apps/ALP/ALP/static/data/api_key.txt') as f:
-#         key = f.read()
-#         openai.api_key = key
-
-#     # Grab session names from the form
-#     new_session_name = request.form.get('new_session_name',0)
-#     existing_session_name = request.form.get('existing_session',0)
-
-#     # Determine if we deal with new or existing session
-#     if new_session_name != 0:
-#         session['NEW_SESSION'] = True
-#         session_name = new_session_name
-#         session_date = datetime.datetime.fromtimestamp(time.time())
-#     elif existing_session_name != 0:
-#         session['NEW_SESSION'] = False
-#         # session name and date comes as string. We need to extract them.
-#         pattern = r"'(.*?)'"
-#         existing_session_details = re.findall(pattern, existing_session_name)
-#         session_name = existing_session_details[0]
-#         session_date = existing_session_details[1]
-
-#     # Make sure the session name is formatted correctly
-#     session_name = cproc.process_name(session_name)
-
-#     # Set session variables
-#     session['SESSION_TIME'] = str(int(time.time()))
-#     session['SESSION_DATE'] = str(session_date).split()[0]
-#     session['SESSION_NAME'] = session_name
-#     session['UUID'] = cproc.create_uuid()
-
-
-#     # New session has specific rules
-#     if session['NEW_SESSION']:
-#         # Logic for new session. 
-#         # Insert session details to session table, populate the context table
-#         # kick-off the embedding process
-#         file_ = request.files['pdf']
-#         file_name = cproc.process_name(file_.filename)
-#         session['SESSION_SOURCE'] = file_name
-
-
-#         # Save the file to the upload folder
-#         saved_fname = session['SESSION_NAME'] + '_' + file_name
-#         fpath = os.path.join(prm.UPLOAD_FOLDER, saved_fname)
-#         file_.save(fpath)
-
-#         # Load the pdf & process the text
-#         loader = PyPDFLoader(fpath) # langchain simple pdf loader
-#         pages = loader.load_and_split() # split by pages
-
-#         # Process text data further so it fits the context mechanism
-#         pages_df = cproc.pages_to_dataframe(pages)
-#         pages_refined_df = cproc.split_pages(pages_df, session['SESSION_NAME'])
-        
-#         # Get the embedding cost
-#         embedding_cost = round(cproc.embed_cost(pages_refined_df),4)
-#         # express embedding cost in dollars
-#         embedding_cost = f"${embedding_cost}"
-#         doc_length = pages_refined_df.shape[0]
-#         length_warning = doc_length / 60 > 1
-
-#         ## DMODEL IMPLEMENTATION
-#         # create uuid for the collection and for each text instance
-#         session['COLLECTION_UUID'] = cproc.create_uuid()
-#         pages_refined_df['doc_uuid'] = [cproc.create_uuid() for x in range(pages_refined_df.shape[0])] 
-#         pages_refined_df['uuid'] = session['COLLECTION_UUID']
-
-#         # Populate session and interim context table
-#         with db as db_conn:
-#             db_conn.insert_session(
-#                 session['UUID'],
-#                 'collection uuid',
-#                 'chat uuid',
-#                 session['SESSION_NAME'], 
-#                 session['SESSION_DATE'], 
-#                 session['SESSION_SOURCE']
-#                 )
-#             db_conn.insert_context(
-#                 pages_refined_df, 
-#                 table_name='interim_collections', 
-#                 if_exist='replace'
-#                 )
-    
-
-#         return render_template(
-#             'summary.html', 
-#             session_uuid=session['UUID'],
-#             session_name=session_name, 
-#             embedding_cost=embedding_cost,
-#             doc_length=doc_length,
-#             length_warning=length_warning
-#             )
-    
-#     # If we deal with existing session 
-#     # Proceed to the chatbot
-#     else:
-#        return redirect(
-#             url_for('index'))
-
-
-# @app.route('/start_embedding', methods=['POST'])
-# def start_embedding():
-#     """Start the embedding process
-#     """
-
-#     db = DatabaseHandler(prm.DB_PATH)
-
-#     # Load context data from interim table
-#     with db as db_conn:
-#         pages_refined_df = db_conn.load_context(
-#             session['SESSION_NAME'], 
-#             table_name='interim_collections'
-#             )
-
-#         # Perform the embedding process here
-#         print('Embedding process started...')
-#         pages_embed_df = cproc.embed_pages(pages_refined_df)
-#         print('Embedding process finished.')
-#         ## TODO: use vectorstore to store embeddings
-#         print('!!!!!', pages_embed_df['embedding'].dtype)
-#         pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
-
-#         ## DMODEL UPDATE
-#         ## Decouple context from embeddings
-#         ## TODO: implement UUID for context
-#         to_serialize_df = pages_embed_df[['session_name', 'embedding']]
-#         embed_df = cproc.serialize_embedding(to_serialize_df)
-#         print(embed_df.head())
-#         #######################
-
-#         # insert data with embedding to main context table with if exist = append.
-#         db_conn.insert_context(pages_embed_df)
-
-#     # Proceed to the chatbot
-#     return redirect(url_for('index'))
-
-
 
 
 def open_browser():
