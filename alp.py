@@ -184,6 +184,9 @@ def process_session():
         session['SESSION_NAME'] = name
         session['UUID'] = sesion_id
 
+        return redirect(
+            url_for('index'))
+
 
     elif session_action == 'Create':
         session_name = request.form.get('new_session_name', 0)
@@ -204,13 +207,6 @@ def process_session():
                     session['SESSION_DATE']
                 )
 
-        return redirect(
-            url_for('index'))
-    
-
-    elif session_action == 'Start':
-        print('Starting existing: ', session['SESSION_NAME'])
-        # proceed to interaction
         return redirect(
             url_for('index'))
 
@@ -275,18 +271,9 @@ def ask():
         recall_table_context = db_conn.load_context(collections)
         recall_table_chat = db_conn.load_context(session['UUID'], table_name='chat_history')
     
-
-    ## Chop recall table to only include contexts for sources, user, or assistant
-    # src_f = (recall_table['interaction_type'] == 'source')
-    usr_f = (recall_table_chat['interaction_type'] == 'user') & (recall_table_chat['timestamp']!=0)
-    ast_f = (recall_table_chat['interaction_type'] == 'assistant') & (recall_table_chat['timestamp']!=0)
-    
-    # recall_table_source = recall_table[src_f]
     recall_table_source = recall_table_context
-    recall_table_user = recall_table_chat[usr_f]
-    recall_table_assistant = recall_table_chat[ast_f]
+    recall_table_user, recall_table_assistant = cproc.prepare_chat_recall(recall_table_chat)
 
-    # TODO: make a function in cproc out of that!!!
     recal_embed_source = cproc.convert_table_to_dct(recall_table_source)
     recal_embed_user = cproc.convert_table_to_dct(recall_table_user)
     recal_embed_assistant = cproc.convert_table_to_dct(recall_table_assistant)

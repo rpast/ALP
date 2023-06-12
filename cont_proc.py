@@ -175,3 +175,12 @@ def serialize_embedding(embedding: pd.DataFrame):
     """
     embedding['embedding'] = embedding['embedding'].apply(lambda x: pickle.dumps(x))
     return embedding
+
+
+def prepare_chat_recall(chat_table):
+    """Prepare chat recall table for chatbot memory
+    """
+    usr_f = (chat_table['interaction_type'] == 'user') & (chat_table['timestamp']!=0)
+    ast_f = (chat_table['interaction_type'] == 'assistant') & (chat_table['timestamp']!=0)
+    
+    return chat_table[usr_f], chat_table[ast_f]
