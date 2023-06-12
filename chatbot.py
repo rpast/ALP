@@ -3,6 +3,7 @@
 
 import openai
 import pandas as pd
+import oai_tool as oai
 
 class Chatbot:
     def __init__(self):
@@ -42,25 +43,68 @@ class Chatbot:
 
         return api_response
     
+    def retrieve_closest_idx(self, q, n, src, usr, ast):
+        """Retrieves n closest samples from recall tables.
+        Acts as a simple nearest neighbors search with cosine similarity.
+        """
 
-# Create Session class that handles separate colelctions and chat history.
-class Session:
-    """Manages Session state
-    """
+        self.recall_source_idx = None
+        self.recall_user_idx = None
+        self.recall_assistant_idx = None
 
-    def __init__(self, session_table) -> None:
+        ## Get SRC context
+        if len(src) == 0:
+            print('WARNING! No source material found.')
+            self.recall_source_idx = []
+        else:
+            # Get the context most relevant to user's question
+            recall_source_id = oai.order_document_sections_by_query_similarity(q, src)[0:n]
+            if len(recall_source_id)>1:
+                # If recal source id is a list n>1, join the text from the list
+                self.recall_source_idx = [x[1] for x in recall_source_id]
+            else: 
+                # Otherwise just get the text from the single index
+                self.recall_source_idx = recall_source_id[1]
 
-        # TODO: test if ~collection_uuid are unique
-        self.session_uuid = session_table['uuid'].unique()[0]
-        self.collection_uuid = session_table['collection_uuid'].unique().tolist()
-        self.chat_uuid = session_table['chat_uuid'].unique()[0]
-        self.session_name = session_table['session_name'].unique()[0]
-        self.session_date = session_table['session_date'].unique()[0]
-    
-    def __repr__(self) -> str:
-        return f"""
-            Session: {self.session_name} ({self.session_uuid}); 
-            Date: {self.session_date}; 
-            Collections: {self.collection_uuid}; 
-            Chat: {self.chat_uuid}
-            """
+        ## GET QRY context
+        # We get most relevant context from the user's previous messages here
+        if len(usr) == 0:
+            print('No context found in user chat history')
+            self.recall_user_idx = []
+        else:
+            self.recall_user_idx = oai.order_document_sections_by_query_similarity(q, usr)[0][1]
+
+        ## GET RPL context
+        # We get most relevant context from the agent's previous messages here
+        if len(ast) == 0:
+            print('No context found agent chat history')
+            self.recall_assistant_idx = []
+        else:
+            self.recall_assistant_idx = oai.order_document_sections_by_query_similarity(q, ast)[0][1]
+
+
+    def retrieve_text(self, src, chat):
+        self.src_text = 'No source text found'
+        self.usr_text = 'No user text found'
+        self.ast_text = 'No assistant text found'
+
+
+        if self.recall_source_idx:
+            if self.recall_source_idx != []:
+                src_text = src.loc[self.recall_source_idx, 'text'].tolist()
+                src_text = '| '.join(src_text)
+
+
+        if self.recall_user_idx:
+            if self.recall_user_idx != []:
+                usr_text = chat.loc[self.recall_user_idx]['text']
+
+
+        if self.recall_assistant_idx:
+            if self.recall_assistant_idx != []:
+                ast_text = chat.loc[self.recall_assistant_idx]['text']
+
+        return src_text, usr_text, ast_text
+        
+
+

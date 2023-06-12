@@ -280,46 +280,27 @@ def ask():
 
     # TODO: this should be a chatbot method
     ## Get the context from recall table that is the most similar to user input
-    num_samples = prm.NUM_SAMPLES # <- this defines how many samples we want to get from the source material
+    num_samples = prm.NUM_SAMPLES
     if recall_table_source.shape[0] < prm.NUM_SAMPLES:
         # This should happen for short documents otherwise this suggests a bug (usually with session name)
         num_samples = recall_table_source.shape[0]
         print('WARNING! Source material is shorter than number of samples you want to get. Setting number of samples to the number of source material sections.')
 
-    ## Get SRC context
-    if len(recal_embed_source) == 0:
-        recal_source = 'No context found'
-        print('WARNING! No source material found.')
-        idxs=[]
-    else:
-        # Get the context most relevant to user's question
-        recal_source_id = oai.order_document_sections_by_query_similarity(question, recal_embed_source)[0:num_samples]
-        if len(recal_source_id)>1:
-            # If recal source id is a list n>1, join the text from the list
-            idxs = [x[1] for x in recal_source_id]
-            recal_source = recall_table_context.loc[idxs]['text'].to_list()
-            recal_source = '| '.join(recal_source)
-        else: 
-            # Otherwise just get the text from the single index
-            idxs = recal_source_id[1]
-            recal_source = recall_table_context.loc[idxs]['text']
 
-    ## GET QRY context
-    # We get most relevant context from the user's previous messages here
-    if len(recal_embed_user) == 0:
-        recal_user = 'No context found in user chat history'
-    else:
-        recal_user_id = oai.order_document_sections_by_query_similarity(question, recal_embed_user)[0][1]
-        recal_user = recall_table_chat.loc[recal_user_id]['text']
+    # Get the closest index - This will update index attributes of chatbot object
+    # that are used later to retrieve text and page numbers
+    chatbot.retrieve_closest_idx(
+        question,
+        num_samples,
+        recal_embed_source,
+        recal_embed_user,
+        recal_embed_assistant
+    )
 
-    ## GET RPL context
-    # We get most relevant context from the agent's previous messages here
-    if len(recal_embed_assistant) == 0:
-        recal_agent = 'No context found agent chat history'
-    else:
-        recal_agent_id = oai.order_document_sections_by_query_similarity(question, recal_embed_assistant)[0][1]
-        recal_agent = recall_table_chat.loc[recal_agent_id]['text']
-
+    recal_source, recal_user, recal_agent = chatbot.retrieve_text(
+        recall_table_context,
+        recall_table_chat,
+    )
 
     # Look for agent and user messages in the interaction table that have the latest timestamp
     # We will put them in the context too.
@@ -340,10 +321,10 @@ def ask():
     ## Grab the page number from the recall table
     ## It will become handy when user wants to know from which chapter the context was taken
 
-    if len(idxs)>1:
-        recall_source_pages = recall_table_context.loc[idxs]['page'].to_list()
-    elif len(idxs)==1:
-        recall_source_pages = recall_table_context.loc[idxs]['page']
+    if len(chatbot.recall_source_idx)>1:
+        recall_source_pages = recall_table_context.loc[chatbot.recall_source_idx]['page'].to_list()
+    elif len(chatbot.recall_source_idx)==1:
+        recall_source_pages = recall_table_context.loc[chatbot.recall_source_idx]['page']
     else:
         recall_source_pages = 'No context found'
 
