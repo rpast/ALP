@@ -91,7 +91,7 @@ def split_contents(x):
     return [x['contents'][i:i+thres] for i in range(0, len(x['contents']), thres)]
 
 
-def split_pages(pages_df, collection_name):
+def split_pages(pages_df):
     """Split pages that are too long for the model
     prepare the contents to be embedded
     """
