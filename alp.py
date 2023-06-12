@@ -22,6 +22,7 @@ import webbrowser
 from waitress import serve
 from threading import Timer
 
+##########################################################################################
 
 # Set up paths
 template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
@@ -37,31 +38,11 @@ app = Flask(
 
 app.secret_key = os.urandom(24)
 
-## Load key from api_key.txt THIS IS FOR DEV ONLY
-with open('/home/nf/Documents/projekty/ai_apps/ALP/ALP/static/data/api_key.txt') as f:
-    key_ = f.read()
-    openai.api_key = key_
-
-
-# Intitiate database if not exist
-db_exist = os.path.exists(prm.DB_PATH)
-if not db_exist:
-    with DatabaseHandler(prm.DB_PATH) as db:
-        db.write_db(prm.SESSION_TABLE_SQL)
-        # db.write_db(prm.INTERIM_COLLECTIONS_TABLE_SQL)
-        db.write_db(prm.COLLECTIONS_TABLE_SQL)
-        db.write_db(prm.CHAT_HIST_TABLE_SQL)
-        db.write_db(prm.EMBEDDINGS_TABLE_SQL)
-
-# Spin up chatbot instance
-chatbot = Chatbot()
-print("!Chatbot initialized")
-
+###########################################################################################
 
 # Render home page
 @app.route('/')
 def home():
-
     return render_template(
         'home.html'
         )
@@ -80,7 +61,6 @@ def process_collection():
     Process the collection of documents.
     """
     print("!Processing collection")
-    db = DatabaseHandler(prm.DB_PATH)
 
     # Get the data from the form
     collection_name = request.form['collection_name']
@@ -105,33 +85,33 @@ def process_collection():
 
     # Process text data further so it fits the context mechanism
     pages_df = cproc.pages_to_dataframe(pages)
-    pages_refined_df = cproc.split_pages(pages_df, collection_name)
+    pages_refined_df = cproc.split_pages(pages_df)
+    pages_processed_df = cproc.prepare_for_embed(pages_refined_df, collection_name)
 
     # Add UUIDs to the dataframe!
-    pages_refined_df['uuid'] = cproc.create_uuid()
-    pages_refined_df['doc_uuid'] = [cproc.create_uuid() for x in range(pages_refined_df.shape[0])]
+    pages_processed_df['uuid'] = cproc.create_uuid()
+    pages_processed_df['doc_uuid'] = [cproc.create_uuid() for x in range(pages_processed_df.shape[0])]
 
 
     # TODO: Switch to Hugging Face API with embedding model
     # Get the embedding cost
-    embedding_cost = round(cproc.embed_cost(pages_refined_df),4)
+    embedding_cost = round(cproc.embed_cost(pages_processed_df),4)
     # express embedding cost in dollars
     embedding_cost = f"${embedding_cost}"
-    doc_length = pages_refined_df.shape[0]
+    doc_length = pages_processed_df.shape[0]
     length_warning = doc_length / 60 > 1
     print(f"!Embedding cost: {embedding_cost}")
 
     if length_warning != True:
         # Perform the embedding process here
         print('Embedding process started...')
-        pages_embed_df = cproc.embed_pages(pages_refined_df)
+        pages_embed_df = cproc.embed_pages(pages_processed_df)
         print('Embedding process finished.')
         ## TODO: use vectorstore to store embeddings
         pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
 
         ## DMODEL UPDATE
-        ## Decouple context from embeddings
-        ## TODO: implement UUID for context
+        ## TODO: Decouple context from embeddings
         to_serialize_df = pages_embed_df[['name', 'embedding']]
         embed_df = cproc.serialize_embedding(to_serialize_df)
         #######################
@@ -152,8 +132,7 @@ def session_manager():
     """Session manager
     Manage sessions.
     """
-    db = DatabaseHandler(prm.DB_PATH)
-
+    
     # Load session names from the database
     with db as db_conn:
         # We want to see available sessions
@@ -169,12 +148,7 @@ def session_manager():
             sessions = []
         
         # We want to see available collections
-        # TODO: make a method out of that
-        subs = ['name','uuid']
-        collections_table = pd.read_sql('SELECT * FROM collections', db_conn.conn)[subs]
-        collections = collections_table.drop_duplicates(subset=subs)
-        # return list of tuples from collections
-        collections = [tuple(x) for x in collections.values]
+        collections = db_conn.load_collections_all()
 
     return render_template(
             'session_manager.html',
@@ -191,24 +165,18 @@ def process_session():
 
     session['UUID'] = cproc.create_uuid()
     session['SESSION_DATE'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    db = DatabaseHandler(prm.DB_PATH)
 
     ## Get the data from the form
     # Pass API key right to the openai object
     # openai.api_key = request.form['api_key']
-
 
     #determine if use clicked session_create or session_start
     session_action = request.form.get('session_action', 0)
 
     # Determine if we deal with new or existing session
     # And handle session variables accordingly
-    if session_action == 'Create':
-        session_name = request.form.get('new_session_name', 0)
 
-        session['SESSION_NAME'] = cproc.process_name(session_name)
-
-    elif session_action == 'Start':
+    if session_action == 'Start':
         name_grabbed = request.form.getlist('existing_session_name')
         sesion_id = [ast.literal_eval(x)[1] for x in name_grabbed][0]
         name = [ast.literal_eval(x)[0] for x in name_grabbed][0]
@@ -217,20 +185,24 @@ def process_session():
         session['UUID'] = sesion_id
 
 
-    if session_action == 'Create':
+    elif session_action == 'Create':
+        session_name = request.form.get('new_session_name', 0)
+        session['SESSION_NAME'] = cproc.process_name(session_name)
         print('Creating new session: ', session['SESSION_NAME'])
 
         # grab collections from the form
         collections = request.form.getlist('collections')
 
-        collection_ids = [ast.literal_eval(x)[1] for x in collections]
+        collection_ids = [ast.literal_eval(x)[0] for x in collections]
+        print('Collections: ', collection_ids)
         for collection_uuid in collection_ids:
-            db.insert_session(
-                session['UUID'],
-                collection_uuid,
-                session['SESSION_NAME'],
-                session['SESSION_DATE']
-            )
+            with db as db_conn:
+                db_conn.insert_session(
+                    session['UUID'],
+                    collection_uuid,
+                    session['SESSION_NAME'],
+                    session['SESSION_DATE']
+                )
 
         return redirect(
             url_for('index'))
@@ -247,8 +219,6 @@ def process_session():
 def index():
     """render interaction main page
     """
-
-    db = DatabaseHandler(prm.DB_PATH)
 
     # Load chat history
     with db as db_conn:
@@ -292,8 +262,6 @@ def index():
 def ask():
     """handle POST request from the form and return the response
     """
-
-    db = DatabaseHandler(prm.DB_PATH)
 
     data = request.get_json()
     question = data['question']
@@ -448,8 +416,6 @@ def export_interactions():
     """Export the interaction table as a JSON file for download.
     """
 
-    db = DatabaseHandler(prm.DB_PATH)
-    
     # Connect to the database
     with db as db_conn:
         # Retrieve the interaction table
@@ -487,6 +453,34 @@ def open_browser():
 
 
 if __name__ == '__main__':
+
+    ## Load key from api_key.txt THIS IS FOR DEV ONLY
+    with open('/home/nf/Documents/projekty/ai_apps/ALP/ALP/static/data/api_key.txt') as f:
+        key_ = f.read()
+        openai.api_key = key_
+
+
+    # Intitiate database if not exist
+    db_exist = os.path.exists(prm.DB_PATH)
+    print(f'Database exists: {db_exist}')
+    if not db_exist:
+        # Initialize the database
+        db = DatabaseHandler(prm.DB_PATH)
+        with db as db_conn:
+            db_conn.write_db(prm.SESSION_TABLE_SQL)
+            # db.write_db(prm.INTERIM_COLLECTIONS_TABLE_SQL)
+            db_conn.write_db(prm.COLLECTIONS_TABLE_SQL)
+            db_conn.write_db(prm.CHAT_HIST_TABLE_SQL)
+            db_conn.write_db(prm.EMBEDDINGS_TABLE_SQL)
+    else:
+        # Initialize the database
+        db = DatabaseHandler(prm.DB_PATH)
+
+    # Spin up chatbot instance
+    chatbot = Chatbot()
+    print("!Chatbot initialized")
+
+
     # Run DEV server
     app.run(debug=True, host='0.0.0.0', port=5000)
 

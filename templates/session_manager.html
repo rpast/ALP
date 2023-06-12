@@ -49,7 +49,7 @@
                             <label for="collections">Select collections for the new session:</label>
                             <select id="collections" name="collections" multiple>
                                 {% for collection in collections %}
-                                <option value="{{ collection }}">{{ collection }}</option>
+                                <option value="{{ collection }}">{{ (collection[1],collection[0]) }}</option>
                                 {% endfor %}
                             </select>
 
@@ -66,7 +66,7 @@
                     <p>
                         If you create a new session, you have to choose collections to be used in the session.
                     </p>
-                    <p id="conditional-text" style="color: #16b4a2">(ﾉ☉ヮ⚆)ﾉ ⌒*:･ﾟ✧</p>
+                    <p id="conditional-text" style="color: #ff00ff">(ﾉ☉ヮ⚆)ﾉ ⌒*:･ﾟ✧</p>
                 </div>
             </div>
         </div>

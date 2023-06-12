@@ -51,8 +51,10 @@ def long_date_to_short(date):
     date = date.split(' ')[0]
     return date
 
+
 def create_uuid():
     return str(uuid.uuid4())
+
 
 def pages_to_dict(pages):
     """convert langchain.docstore.document.Document to dict"""
@@ -96,7 +98,9 @@ def split_pages(pages_df, collection_name):
     # For instances with token count > token_thres, split them so they fit model threshold so we could get their embeddings
     # Calculate split factor for each chapter
     pages_df['split_factor'] = 1
-    pages_df.loc[pages_df['num_tokens_oai']>prm.TOKEN_THRES, 'split_factor'] = round(pages_df['num_tokens_oai']/prm.TOKEN_THRES, 0)
+    pages_df.loc[pages_df['num_tokens_oai']>prm.TOKEN_THRES, 'split_factor'] = round(
+        pages_df['num_tokens_oai']/prm.TOKEN_THRES, 0
+        )
 
     # Split contents
     pages_df['contents_split'] = pages_df.apply(
@@ -113,15 +117,23 @@ def split_pages(pages_df, collection_name):
         lambda x: num_tokens_from_messages([{'message': x}])
     )
 
-    # Form text column for each fragment
-    pages_contents_long_df['text'] = "PAGE: " + pages_contents_long_df.index.astype(str) + " CONTENT: " + pages_contents_long_df['contents_split']
-
     ## Drop rows where num_tokens_oai is less than 25
     pages_contents_long_df = pages_contents_long_df[pages_contents_long_df['num_tokens_oai'] > 25].copy()
+    
+    return pages_contents_long_df
+
+
+def prepare_for_embed(pages_df, collection_name):
+    """Pre-process pages to be embedded
+    returns a dataframe with the following columns:
+    name, interaction_type, text, text_token_no, page, timestamp
+    """
+    # Form text column for each fragment
+    pages_df['text'] = "PAGE: " + pages_df.index.astype(str) + " CONTENT: " + pages_df['contents_split']
 
     # Further dataframe processing
-    pages_contents_long_df = (
-        pages_contents_long_df
+    return (
+        pages_df
         .drop(columns=['contents_split']) # Drop contents_split column
         .reset_index() # Reset index so chapter names are stored in columns
         .rename(columns={'index': 'page', 'num_tokens_oai': 'text_token_no'}) # Rename index column to chapter
@@ -129,9 +141,7 @@ def split_pages(pages_df, collection_name):
         .assign(interaction_type='source') ## Add interaction type column
         .assign(timestamp=0) # Add timestamp column
         [['name', 'interaction_type', 'text', 'text_token_no', 'page', 'timestamp']]
-        )
-
-    return pages_contents_long_df
+    )
 
 
 def embed_cost(pages_contents_long_df, price_per_k=0.0004):

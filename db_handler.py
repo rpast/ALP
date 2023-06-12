@@ -125,37 +125,6 @@ class DatabaseHandler:
             print(e)
 
 
-    # def get_session(self, session_uuid):
-    #     """Fetch session details from database using passed session uuid.
-    #     """
-    #     try:
-    #         query = f"SELECT * FROM sessions WHERE uuid = '{session_uuid}'"
-    #         self.session_table = pd.read_sql_query(query, self.conn)
-
-    #         return self.session_table
-    #     except Exception as e:
-    #         print(e)
-
-
-    # def get_context(self, uuid, table_name='collections', limit=None) -> pd.DataFrame:
-    #     """Get context data from the database
-    #     :param uuid: uuid
-    #     :return: context dataframe
-    #     """
-    #     try:
-    #         # if limit not none then return number of rows = limit
-    #         if limit is not None:
-    #             query = f"SELECT * FROM {table_name} WHERE uuid = '{uuid}' LIMIT {limit}"
-    #         else:
-    #             query = f"SELECT * FROM {table_name} WHERE uuid = '{uuid}'"
-
-    #         context_df = pd.read_sql_query(query, self.conn)
-
-    #         return context_df
-    #     except Exception as e:
-    #         print(e)
-
-
 
     def insert_context(self, context_df, table_name='collections', if_exist='append'):
         """Insert context data into the database
@@ -278,34 +247,23 @@ class DatabaseHandler:
             print(e)
 
             return None
-
-    # def load_chat_history(self, session_id) -> pd.DataFrame:
-    #     """Load chat history from the database to a dataframe
-    #     :param session: session name
-    #     :return:
-    #     """
-    #     try:
-    #         c = self.conn.cursor()
-    #         # c.execute(f"SELECT * FROM context")
-    #         c.execute(f"""SELECT text, timestamp, interaction_type
-    #             FROM chat_history
-    #             WHERE
-    #                 UUID = ? AND
-    #                 TIMESTAMP != 0
-    #             """, (session_id,))
-    #         print([desc[0] for desc in c.description])
-    #         colnames = [desc[0] for desc in c.description]
-    #         data = c.fetchall()
-    #         # # get column names
-    #         chat_history_df = pd.DataFrame(data, columns=colnames)
-    #         chat_history_df['timestamp'] = pd.to_numeric(chat_history_df['timestamp'])
-
-    #         return chat_history_df
         
-    #     except Exception as e:
-    #         print(e)
+    def load_collections_all(self) -> list:
+        """Load all collection names and uuids available in db.collections
+        """
+        try:
+            c = self.conn.cursor()
+            c.execute(f"SELECT DISTINCT uuid, name FROM collections")
+            data = c.fetchall()
+            #if data is empty return []
+            # if not data:
+            #     return []
+            return data
 
-    #         return None
+        except Exception as e:
+            print(e)
+
+            return None
 
 
     # method to load all session names from context table in the database
