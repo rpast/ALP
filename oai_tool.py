@@ -80,6 +80,8 @@ def order_document_sections_by_query_similarity(query, contexts):
     
     Return the list of document sections, sorted by relevance in descending order.
     """
+    # TODO: probable inefficiency - this embedding is later calculated
+    # again downstream when saving to the database.
     query_embedding = get_embedding(query)
     
     document_similarities = sorted(

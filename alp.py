@@ -104,27 +104,13 @@ def process_collection():
 
     if length_warning != True:
         # Perform the embedding process here
-        print('Embedding process started...')
+        print('Embedding request sent to OAI...')
         pages_embed_df = cproc.embed_pages(pages_processed_df)
-        print('Embedding process finished.')
-        ## TODO: use vectorstore to store embeddings
-        # pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
-
-        ## DMODEL UPDATE
-        ## TODO: Decouple context from embeddings
-        # to_serialize_df = pages_embed_df[['name', 'embedding']]
-        # embed_df = cproc.serialize_embedding(to_serialize_df)
-        # print(embed_df)
-        #######################
-
-        # insert data with embedding to main context table with if exist = append.
-        # print(pages_embed_df.head(1).T)
+        print('Answer received. Saving to database..')
         with db as db_conn:
             db_conn.insert_context(pages_embed_df.drop(columns=['embedding']))
             # rename from doc_uuid to uuid needed to fit table structure
             db_conn.insert_embeddings(pages_embed_df[['doc_uuid', 'embedding']].rename(columns={'doc_uuid':'uuid'}))
-        
-        print('!Embedding process finished. Collection saved to database.')
         
     return render_template(
             'collection_manager.html'
@@ -274,9 +260,20 @@ def ask():
         collections = db_conn.load_collections(session['UUID'])
         recall_table_context = db_conn.load_context(collections)
         recall_table_chat = db_conn.load_context(session['UUID'], table_name='chat_history')
+
+        # fetch embeddings from embeddings table for given doc uuids
+        recall_table_context = db_conn.load_embeddings(recall_table_context)
+        recall_table_chat = db_conn.load_embeddings(recall_table_chat)
     
+    print(recall_table_context)
+    print(recall_table_chat)
     recall_table_source = recall_table_context
     recall_table_user, recall_table_assistant = cproc.prepare_chat_recall(recall_table_chat)
+
+    # print(recall_table_source.columns)
+    # print(recall_table_user.columns)
+    # print(recall_table_assistant.columns)
+    # print('\n')
 
     recal_embed_source = cproc.convert_table_to_dct(recall_table_source)
     recal_embed_user = cproc.convert_table_to_dct(recall_table_user)

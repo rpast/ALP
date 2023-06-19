@@ -165,11 +165,9 @@ def convert_table_to_dct(table):
     """
     table_dct = table[['embedding']].to_dict()['embedding']
     for k, v in table_dct.items():
-        table_dct[k] = ast.literal_eval(v)
+        # table_dct[k] = ast.literal_eval(v)
+        table_dct[k] = v
     return table_dct
-
-
-
 
 def prepare_chat_recall(chat_table):
     """Prepare chat recall table for chatbot memory

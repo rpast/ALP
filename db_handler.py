@@ -4,6 +4,7 @@
 import os
 import sqlite3
 import tiktoken
+import pickle
 import pandas as pd
 # import params as prm
 from oai_tool import get_embedding
@@ -169,7 +170,7 @@ class DatabaseHandler:
             message, 
             page=None,
             timestamp=0) -> bool:
-        """Insert interaction data into the database's Interaction table.
+        """Insert interaction data into the database's Interaction and Embeddings table.
         :param inter_type: interaction type
         :param message: interaction message
         :param page: page number
@@ -178,32 +179,29 @@ class DatabaseHandler:
         """
 
         uuid = create_uuid()
-        embedding = get_embedding(message)
+        embedding = pickle.dumps(
+            get_embedding(message)
+        )
 
         encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
         num_tokens_oai = len(encoding.encode(message))
 
         message = message.replace('"', '').replace("'", "")
 
-        query = f"""
+        # TODO: base data inserting on this approach (?)
+        query_message = """
             INSERT INTO chat_history 
-            VALUES (
-                '{session_uuid}', 
-                '{uuid}', 
-                '{inter_type}', 
-                '{message}', 
-                '{num_tokens_oai}', 
-                '{page}', 
-                '{embedding}',
-                '{timestamp}'
-                )
-            """
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """
+        query_embedding = """
+            INSERT INTO embeddings
+            VALUES (?, ?)
+        """
 
         try:
             c = self.conn.cursor()
-            c.execute(
-                query
-                )
+            c.execute(query_message, (session_uuid, uuid, inter_type, message, num_tokens_oai, page, timestamp))
+            c.execute(query_embedding, (uuid, embedding))
 
             self.conn.commit()
 
@@ -248,6 +246,33 @@ class DatabaseHandler:
             print(e)
 
             return None
+        
+    def load_embeddings(self, context_df) -> pd.DataFrame:
+        """enchance context_df with embeddings using sql query
+        """
+        uuids = context_df['doc_uuid'].tolist()
+        placeholders = ', '.join(['?' for _ in uuids])  # Create placeholders for each UUID
+        query = f"""
+            SELECT * FROM embeddings
+            WHERE UUID in ({placeholders})
+        """
+        try:
+            c = self.conn.cursor()
+            c.execute(query, uuids)  # Pass the list of UUIDs as parameters
+            data = c.fetchall()
+            # get column names
+            colnames = [desc[0] for desc in c.description]
+            embeddings_df = pd.DataFrame(data, columns=colnames)
+            embeddings_df['embedding'] = embeddings_df['embedding'].apply(lambda x: pickle.loads(x))
+            enriched_context_df = context_df.merge(embeddings_df, how='left', left_on='doc_uuid', right_on='uuid')
+            return enriched_context_df
+
+        except Exception as e:
+            print(e)
+            return None
+
+
+
         
 
     def load_collections(self, session_uuid) -> list:

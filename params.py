@@ -76,13 +76,5 @@ CHAT_HIST_TABLE_SQL = """
         text TEXT NOT NULL,
         text_token_no INTEGER,
         page INTEGER,
-        embedding BLOB NOT NULL,
         timestamp INTEGER
-        )"""
-
-# uuid is a FK -> context table, chat_history table
-EMBEDDINGS_TABLE_SQL = """
-    CREATE TABLE IF NOT EXISTS embeddings (
-        uuid TEXT NOT NULL,
-        embedding BLOB NOT NULL
         )"""
