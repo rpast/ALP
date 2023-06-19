@@ -180,7 +180,7 @@ def serialize_embedding(embedding: pd.DataFrame):
 def prepare_chat_recall(chat_table):
     """Prepare chat recall table for chatbot memory
     """
-    usr_f = (chat_table['interaction_type'] == 'user') & (chat_table['timestamp']!=0)
-    ast_f = (chat_table['interaction_type'] == 'assistant') & (chat_table['timestamp']!=0)
+    usr_f = (chat_table['interaction_type'] == 'user')
+    ast_f = (chat_table['interaction_type'] == 'assistant')
     
     return chat_table[usr_f], chat_table[ast_f]

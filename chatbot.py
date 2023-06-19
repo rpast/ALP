@@ -91,20 +91,20 @@ class Chatbot:
 
         if self.recall_source_idx:
             if self.recall_source_idx != []:
-                src_text = src.loc[self.recall_source_idx, 'text'].tolist()
-                src_text = '| '.join(src_text)
+                self.src_text = src.loc[self.recall_source_idx, 'text'].tolist()
+                self.src_text = '| '.join(self.src_text)
 
 
         if self.recall_user_idx:
             if self.recall_user_idx != []:
-                usr_text = chat.loc[self.recall_user_idx]['text']
+                self.usr_text = chat.loc[self.recall_user_idx]['text']
 
 
         if self.recall_assistant_idx:
             if self.recall_assistant_idx != []:
-                ast_text = chat.loc[self.recall_assistant_idx]['text']
+                self.ast_text = chat.loc[self.recall_assistant_idx]['text']
 
-        return src_text, usr_text, ast_text
+        return self.src_text, self.usr_text, self.ast_text
         
 
 

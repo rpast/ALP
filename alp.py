@@ -278,7 +278,7 @@ def ask():
     recal_embed_user = cproc.convert_table_to_dct(recall_table_user)
     recal_embed_assistant = cproc.convert_table_to_dct(recall_table_assistant)
 
-    # TODO: this should be a chatbot method
+
     ## Get the context from recall table that is the most similar to user input
     num_samples = prm.NUM_SAMPLES
     if recall_table_source.shape[0] < prm.NUM_SAMPLES:
@@ -289,6 +289,7 @@ def ask():
 
     # Get the closest index - This will update index attributes of chatbot object
     # that are used later to retrieve text and page numbers
+
     chatbot.retrieve_closest_idx(
         question,
         num_samples,
@@ -309,12 +310,12 @@ def ask():
     if last_usr_max == 0:
         latest_user = 'No context found'
     else:
-        latest_user = recall_table_user[recall_table_user['timestamp']==last_usr_max]['text']
+        latest_user = recall_table_user[recall_table_user['timestamp']==last_usr_max]['text'].values[0]
 
     if last_asst_max == 0:
         latest_assistant = 'No context found'
     else:
-        latest_assistant = recall_table_assistant[recall_table_assistant['timestamp']==last_asst_max]['text']
+        latest_assistant = recall_table_assistant[recall_table_assistant['timestamp']==last_asst_max]['text'].values[0]
 
     print('Done handling chat memory and context.')
     
@@ -328,9 +329,16 @@ def ask():
     else:
         recall_source_pages = 'No context found'
 
-    print(f'I will answer your question basing on the following context: {set(recall_source_pages)}')
-
-
+    # print(f'I will answer your question basing on the following context: {set(recall_source_pages)}')
+    # print('\n')
+    # print('Prompt build: ')
+    # print('Latest user message: ', latest_user)
+    # print('Latest assistant message: ', latest_assistant)
+    # print('Recall source: ', recal_source)
+    # print('Recall user: ', recal_user)
+    # print('Recall agent: ', recal_agent)
+    # print('Question: ', question)
+    # print('\n')
     # Build prompt
     message = chatbot.build_prompt(
         latest_user,
