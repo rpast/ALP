@@ -169,6 +169,7 @@ def convert_table_to_dct(table):
         table_dct[k] = v
     return table_dct
 
+
 def prepare_chat_recall(chat_table):
     """Prepare chat recall table for chatbot memory
     """

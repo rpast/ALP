@@ -265,15 +265,9 @@ def ask():
         recall_table_context = db_conn.load_embeddings(recall_table_context)
         recall_table_chat = db_conn.load_embeddings(recall_table_chat)
     
-    print(recall_table_context)
-    print(recall_table_chat)
+    # Prepare recall tables for user and assistant
     recall_table_source = recall_table_context
     recall_table_user, recall_table_assistant = cproc.prepare_chat_recall(recall_table_chat)
-
-    # print(recall_table_source.columns)
-    # print(recall_table_user.columns)
-    # print(recall_table_assistant.columns)
-    # print('\n')
 
     recal_embed_source = cproc.convert_table_to_dct(recall_table_source)
     recal_embed_user = cproc.convert_table_to_dct(recall_table_user)
@@ -333,14 +327,6 @@ def ask():
     print(f'I will answer your question basing on the following context: {set(recall_source_pages)}')
     print('\n')
 
-    # print('Prompt build: ')
-    # print('Latest user message: ', latest_user)
-    # print('Latest assistant message: ', latest_assistant)
-    # print('Recall source: ', recal_source)
-    # print('Recall user: ', recal_user)
-    # print('Recall agent: ', recal_agent)
-    # print('Question: ', question)
-    # print('\n')
     # Build prompt
     message = chatbot.build_prompt(
         latest_user,
