@@ -21,10 +21,10 @@ class DatabaseHandler:
         self.db_file = db_file
         if os.path.exists(db_file):
             print(f"Database file '{db_file}' already exists.")
-            self.create_connection(db_file)
+            # self.create_connection(db_file)
         else:
             print(f"Creating a new database file '{db_file}'.")
-            self.create_connection(db_file)
+            # self.create_connection(db_file)
 
     def __enter__(self):
         """Enter the context manager."""
@@ -49,7 +49,7 @@ class DatabaseHandler:
         self.conn = None
         try:
             self.conn = sqlite3.connect(db_file)
-            print(f'Established connection to database \'{db_file}\'')
+            # print(f'Established connection to database \'{db_file}\'')
         except Exception as e:
             print(e)
 
@@ -59,7 +59,7 @@ class DatabaseHandler:
         """
         if self.conn is not None:
             self.conn.close()
-            print(f'Closed connection to database \'{self.db_file}\'.')
+            # print(f'Closed connection to database \'{self.db_file}\'.')
         else:
             print('No connection to close.')
 
@@ -119,7 +119,7 @@ class DatabaseHandler:
                 """)
             self.conn.commit()
 
-            print(f"Session: \"{sname}\" inserted into the database")
+            print(f"Session: \"{sname}\" inserted into the database with collection: \"{col_uuid}\"")
             return True
         
         except Exception as e:

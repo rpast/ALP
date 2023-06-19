@@ -65,13 +65,11 @@ def process_collection():
     # Get the data from the form
     collection_name = request.form['collection_name']
     collection_name = cproc.process_name(collection_name)
-    print(f"!Collection name: {collection_name}")
 
     # Process the collection
     file_ = request.files['pdf']
     file_name = cproc.process_name(file_.filename)
     collection_source = file_name
-    print(f"!Collection source: {collection_source}")
 
     # Save the file to the upload folder
     saved_fname = collection_name + '_' + file_name
@@ -100,13 +98,13 @@ def process_collection():
     embedding_cost = f"${embedding_cost}"
     doc_length = pages_processed_df.shape[0]
     length_warning = doc_length / 60 > 1
-    print(f"!Embedding cost: {embedding_cost}")
+    print(f"Embedding cost: {embedding_cost}")
 
     if length_warning != True:
         # Perform the embedding process here
-        print('Embedding request sent to OAI...')
+        print('!Embedding request sent to OAI...')
         pages_embed_df = cproc.embed_pages(pages_processed_df)
-        print('Answer received. Saving to database..')
+        print('!Answer received. Saving to database..')
         with db as db_conn:
             db_conn.insert_context(pages_embed_df.drop(columns=['embedding']))
             # rename from doc_uuid to uuid needed to fit table structure
@@ -127,6 +125,7 @@ def session_manager():
     with db as db_conn:
         # We want to see available sessions
         if db_conn.load_session_names() is not None:
+            print('!Sessions found in database. Fetching sessions details')
             session_names = [x[0] for x in db_conn.load_session_names()]
             session_ids = [x[1] for x in db_conn.load_session_names()]
 
@@ -135,6 +134,7 @@ def session_manager():
 
             sessions = list(zip(session_names, session_ids))
         else:
+            print('!No sessions found in database')
             sessions = []
         
         # We want to see available collections
@@ -170,7 +170,7 @@ def process_session():
         name_grabbed = request.form.getlist('existing_session_name')
         sesion_id = [ast.literal_eval(x)[1] for x in name_grabbed][0]
         name = [ast.literal_eval(x)[0] for x in name_grabbed][0]
-        print('Starting existing session: ', name)
+        print('!Starting existing session: ', name)
         session['SESSION_NAME'] = name
         session['UUID'] = sesion_id
 
@@ -181,13 +181,12 @@ def process_session():
     elif session_action == 'Create':
         session_name = request.form.get('new_session_name', 0)
         session['SESSION_NAME'] = cproc.process_name(session_name)
-        print('Creating new session: ', session['SESSION_NAME'])
+        print('!Creating new session: ', session['SESSION_NAME'])
 
         # grab collections from the form
         collections = request.form.getlist('collections')
 
         collection_ids = [ast.literal_eval(x)[0] for x in collections]
-        print('Collections: ', collection_ids)
         for collection_uuid in collection_ids:
             with db as db_conn:
                 db_conn.insert_session(
@@ -208,6 +207,7 @@ def index():
 
     # Load chat history
     with db as db_conn:
+        print('!Loading chat history for initial page load')
         chat_history = db_conn.load_context(
             session['UUID'], 
             table_name='chat_history'
@@ -218,6 +218,7 @@ def index():
     if chat_history.empty:    
         #insert baseline interaction
         with db as db_conn:
+            print('!Inserting baseline interaction')
             db_conn.insert_interaction(
                 session['UUID'],
                 'user',
@@ -252,10 +253,9 @@ def ask():
     data = request.get_json()
     question = data['question']
 
-    # Handle chat memory and context
-    print('Handling chat memory and context...')
-    
+    # Handle chat memory and context    
     with db as db_conn:
+        print('!Loading chat history for interaction')
         # Form recall tables
         collections = db_conn.load_collections(session['UUID'])
         recall_table_context = db_conn.load_context(collections)
@@ -279,7 +279,7 @@ def ask():
     if recall_table_source.shape[0] < prm.NUM_SAMPLES:
         # This should happen for short documents otherwise this suggests a bug (usually with session name)
         num_samples = recall_table_source.shape[0]
-        print('WARNING! Source material is shorter than number of samples you want to get. Setting number of samples to the number of source material sections.')
+        print('!WARNING! Source material is shorter than number of samples you want to get. Setting number of samples to the number of source material sections.')
 
 
     # Get the closest index - This will update index attributes of chatbot object
@@ -312,7 +312,7 @@ def ask():
     else:
         latest_assistant = recall_table_assistant[recall_table_assistant['timestamp']==last_asst_max]['text'].values[0]
 
-    print('Done handling chat memory and context.')
+    print('!Done handling chat memory and context.')
     
     ## Grab the page number from the recall table
     ## It will become handy when user wants to know from which chapter the context was taken
@@ -358,6 +358,7 @@ def ask():
     # save it all to DB so the agent can remember the conversation
     session['SPOT_TIME'] = str(int(time.time()))
     with db as db_conn:
+        print('!Inserting interaction into DB')
         # Insert user message into DB so we can use it for another user's input
         db_conn.insert_interaction(
             session['UUID'],
@@ -382,6 +383,7 @@ def export_interactions():
 
     # Connect to the database
     with db as db_conn:
+        print('!Loading chat history for export')
         # Retrieve the interaction table
         recall_df = db_conn.load_context(session['UUID'], table_name='chat_history')
 
@@ -426,7 +428,7 @@ if __name__ == '__main__':
 
     # Intitiate database if not exist
     db_exist = os.path.exists(prm.DB_PATH)
-    print(f'Database exists: {db_exist}')
+    print(f'!Database exists: {db_exist}')
     if not db_exist:
         # Initialize the database
         db = DatabaseHandler(prm.DB_PATH)
