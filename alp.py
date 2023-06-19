@@ -108,17 +108,21 @@ def process_collection():
         pages_embed_df = cproc.embed_pages(pages_processed_df)
         print('Embedding process finished.')
         ## TODO: use vectorstore to store embeddings
-        pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
+        # pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
 
         ## DMODEL UPDATE
         ## TODO: Decouple context from embeddings
-        to_serialize_df = pages_embed_df[['name', 'embedding']]
-        embed_df = cproc.serialize_embedding(to_serialize_df)
+        # to_serialize_df = pages_embed_df[['name', 'embedding']]
+        # embed_df = cproc.serialize_embedding(to_serialize_df)
+        # print(embed_df)
         #######################
 
         # insert data with embedding to main context table with if exist = append.
+        # print(pages_embed_df.head(1).T)
         with db as db_conn:
-            db_conn.insert_context(pages_embed_df)
+            db_conn.insert_context(pages_embed_df.drop(columns=['embedding']))
+            # rename from doc_uuid to uuid needed to fit table structure
+            db_conn.insert_embeddings(pages_embed_df[['doc_uuid', 'embedding']].rename(columns={'doc_uuid':'uuid'}))
         
         print('!Embedding process finished. Collection saved to database.')
         
@@ -331,7 +335,7 @@ def ask():
 
     print(f'I will answer your question basing on the following context: {set(recall_source_pages)}')
     print('\n')
-    
+
     # print('Prompt build: ')
     # print('Latest user message: ', latest_user)
     # print('Latest assistant message: ', latest_assistant)
@@ -445,7 +449,7 @@ if __name__ == '__main__':
         db = DatabaseHandler(prm.DB_PATH)
         with db as db_conn:
             db_conn.write_db(prm.SESSION_TABLE_SQL)
-            # db.write_db(prm.INTERIM_COLLECTIONS_TABLE_SQL)
+            db_conn.write_db(prm.EMBEDDINGS_TABLE_SQL)
             db_conn.write_db(prm.COLLECTIONS_TABLE_SQL)
             db_conn.write_db(prm.CHAT_HIST_TABLE_SQL)
             db_conn.write_db(prm.EMBEDDINGS_TABLE_SQL)

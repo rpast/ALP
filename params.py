@@ -44,18 +44,12 @@ SESSION_TABLE_SQL = """
         date TEXT NOT NULL
         )"""
 
-# INTERIM_COLLECTIONS_TABLE_SQL = """
-#     CREATE TABLE IF NOT EXISTS interim_collections (
+EMBEDDINGS_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS embeddings (
     
-#         uuid TEXT NOT NULL,
-#         doc_uuid TEXT NOT NULL,
-    
-#         session_name TEXT NOT NULL,
-#         interaction_type TEXT NOT NULL,
-#         text TEXT NOT NULL,
-#         text_token_no INTEGER,
-#         page INTEGER
-#         )"""
+        uuid TEXT NOT NULL,
+        embedding BLOB NOT NULL
+        )"""
 
 COLLECTIONS_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS collections (
@@ -68,7 +62,6 @@ COLLECTIONS_TABLE_SQL = """
         text TEXT NOT NULL,
         text_token_no INTEGER,
         page INTEGER,
-        embedding TEXT NOT NULL,
         timestamp INTEGER
         )"""
 

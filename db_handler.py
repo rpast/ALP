@@ -143,7 +143,24 @@ class DatabaseHandler:
         except Exception as e:
             print(e)
             return False
-        
+
+    def insert_embeddings(self, embedding_df, table_name='embeddings', if_exist='append'):
+        """Insert embeddings data into the database
+        :param embedding_df: embeddings dataframe
+        :return:
+        """
+        try:
+            embedding_df.to_sql(
+                table_name, 
+                self.conn, 
+                if_exists=if_exist, 
+                index=False
+                )
+            print (f"Embeddings inserted into the {table_name} table")
+            return True
+        except Exception as e:
+            print(e)
+            return False
 
     def insert_interaction(
             self, 

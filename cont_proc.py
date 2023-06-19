@@ -154,9 +154,8 @@ def embed_pages(pages_contents_long_df):
     """Get embeddings for each page"""
     # Get embeddings for each page
     pages_contents_long_df['embedding'] = pages_contents_long_df['text'].apply(
-        lambda x: get_embedding(x)
+        lambda x: pickle.dumps(get_embedding(x))
     )
-
     return pages_contents_long_df
 
 
@@ -170,11 +169,6 @@ def convert_table_to_dct(table):
     return table_dct
 
 
-def serialize_embedding(embedding: pd.DataFrame):
-    """Convert embedding to string to store in db
-    """
-    embedding['embedding'] = embedding['embedding'].apply(lambda x: pickle.dumps(x))
-    return embedding
 
 
 def prepare_chat_recall(chat_table):
