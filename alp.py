@@ -329,8 +329,9 @@ def ask():
     else:
         recall_source_pages = 'No context found'
 
-    # print(f'I will answer your question basing on the following context: {set(recall_source_pages)}')
-    # print('\n')
+    print(f'I will answer your question basing on the following context: {set(recall_source_pages)}')
+    print('\n')
+    
     # print('Prompt build: ')
     # print('Latest user message: ', latest_user)
     # print('Latest assistant message: ', latest_assistant)
