@@ -121,17 +121,14 @@ Anytime in the conversation you can get back to *Welcome* to start a new convers
 
 
 ## Todo
-1. [x] Allow user to continue conversations on another sessions.
-2. [ ] Save chat history in separate table
-3. [ ] Upload document into context table
-3. [ ] Allow user to choose context for conversation, or continue the previous one
-
-
-
-   1. [ ] User can clean-up the conversation leaving only embeddings in the conversation hisory.
-   2. [ ] User can delete unwanted converastions from database.
-2. [ ] Display sources used by the agent for the answer.
-3. [ ] Allow user to upload more than one document
-4. [ ] User is able to upload text from other sources 
-5. [ ] Implement alternative embedding models
-6. [ ] Implement models for ai content detection
+- [x] Allow user to continue conversations on another sessions.
+- [x] Save chat history in separate table
+- [x] Upload document into context table
+- [x] Allow user to choose context for conversation, or continue the previous one
+- [ ] Implement alternative embedding models (sentence-transformers)
+- [ ] User can delete unwanted converastions from database.
+- [ ] Display sources used by the agent for the answer.
+- [ ] Allow user to upload more than one document
+- [ ] User is able to upload text from other sources
+- [ ] Improve GUI design
+- [ ] Implement models for ai content detection
