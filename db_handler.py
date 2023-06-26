@@ -3,11 +3,11 @@
 
 import os
 import sqlite3
-import tiktoken
 import pickle
 import pandas as pd
+
 # import params as prm
-from oai_tool import get_embedding
+from ai_tools import get_embedding_sbert, get_tokens
 from cont_proc import create_uuid
 
 
@@ -103,7 +103,6 @@ class DatabaseHandler:
             print(e)
 
 
-    # TODO: use high performance library for writing pandas dataframes to sqlite
     def insert_session(self, uuid, col_uuid, sname, sdate) -> bool:
         """Insert session data into the database's Sessions table.
         :param sname: session name
@@ -180,11 +179,10 @@ class DatabaseHandler:
 
         uuid = create_uuid()
         embedding = pickle.dumps(
-            get_embedding(message)
+            get_embedding_sbert(message)
         )
 
-        encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
-        num_tokens_oai = len(encoding.encode(message))
+        num_tokens_oai = len(get_tokens(message))
 
         message = message.replace('"', '').replace("'", "")
 
@@ -272,9 +270,6 @@ class DatabaseHandler:
             return None
 
 
-
-        
-
     def load_collections(self, session_uuid) -> list:
         """Load collection ids associated with the given session id
         """
@@ -290,6 +285,7 @@ class DatabaseHandler:
 
             return None
         
+
     def load_collections_all(self) -> list:
         """Load all collection names and uuids available in db.collections
         """

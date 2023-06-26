@@ -1,11 +1,9 @@
 import os
 import io
-import re
 import time
 import openai
 import datetime
 import ast
-import pandas as pd
 
 from flask import Flask, request, session, render_template, redirect, url_for, jsonify, send_file
 from langchain.document_loaders import PyPDFLoader
@@ -15,7 +13,7 @@ from chatbot import Chatbot
 import params as prm
 import cont_proc as cproc
 from db_handler import DatabaseHandler
-import oai_tool as oai
+from ai_tools import get_tokens
 
 # Serve app to prod
 import webbrowser
@@ -64,6 +62,7 @@ def process_collection():
 
     # Get the data from the form
     collection_name = request.form['collection_name']
+    embed_method = request.form['embed_method']
     collection_name = cproc.process_name(collection_name)
 
     # Process the collection
@@ -83,8 +82,8 @@ def process_collection():
 
     # Process text data further so it fits the context mechanism
     pages_df = cproc.pages_to_dataframe(pages)
-    pages_refined_df = cproc.split_pages(pages_df)
-    pages_processed_df = cproc.prepare_for_embed(pages_refined_df, collection_name)
+    pages_refined_df = cproc.split_pages(pages_df, method=embed_method)
+    pages_processed_df = cproc.prepare_for_embed(pages_refined_df, collection_name, embed_method)
 
     # Add UUIDs to the dataframe!
     pages_processed_df['uuid'] = cproc.create_uuid()
@@ -97,14 +96,13 @@ def process_collection():
     # express embedding cost in dollars
     embedding_cost = f"${embedding_cost}"
     doc_length = pages_processed_df.shape[0]
-    length_warning = doc_length / 60 > 1
+    length_warning = doc_length / 600 > 1
     print(f"Embedding cost: {embedding_cost}")
 
     if length_warning != True:
-        # Perform the embedding process here
-        print('!Embedding request sent to OAI...')
-        pages_embed_df = cproc.embed_pages(pages_processed_df)
-        print('!Answer received. Saving to database..')
+
+        pages_embed_df = cproc.embed_pages(pages_processed_df, method=embed_method)
+
         with db as db_conn:
             db_conn.insert_context(pages_embed_df.drop(columns=['embedding']))
             # rename from doc_uuid to uuid needed to fit table structure
@@ -344,7 +342,9 @@ def ask():
 
     # Count number of tokens in user message and display it to the user
     # TODO: flash it on the front-end
-    token_passed = oai.num_tokens_from_messages(message)
+    
+    #TODO: bug with message passed to encoder!
+    token_passed = len(get_tokens(message))
     context_capacity =  4096 - token_passed
     print(f"Number of tokens passed to the model: {token_passed}")
     print(f"Number of tokens left in the context: {context_capacity}")
@@ -434,7 +434,6 @@ if __name__ == '__main__':
         db = DatabaseHandler(prm.DB_PATH)
         with db as db_conn:
             db_conn.write_db(prm.SESSION_TABLE_SQL)
-            db_conn.write_db(prm.EMBEDDINGS_TABLE_SQL)
             db_conn.write_db(prm.COLLECTIONS_TABLE_SQL)
             db_conn.write_db(prm.CHAT_HIST_TABLE_SQL)
             db_conn.write_db(prm.EMBEDDINGS_TABLE_SQL)

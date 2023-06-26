@@ -24,6 +24,10 @@ SESSION_TABLE_NAME = 'session'
 TOKEN_THRES = 500 # Number of tokens to split the document into chunks
 NUM_SAMPLES = 5 # Number of samples to take from the document
 
+OPENAI_MODEL = 'gpt-3.5-turbo'
+OPENAI_MODEL_EMBEDDING = 'text-embedding-ada-002'
+SENTENCE_TRANSFORMER_MODEL = 'multi-qa-MiniLM-L6-cos-v1'
+
 
 # Model context management
 SUMMARY_CTXT_USR = "How would you act when I'd ask you what this document is about. Can you summarize it for me?"
@@ -62,10 +66,10 @@ COLLECTIONS_TABLE_SQL = """
         text TEXT NOT NULL,
         text_token_no INTEGER,
         page INTEGER,
-        timestamp INTEGER
+        timestamp INTEGER,
+        embedding_model TEXT NOT NULL
         )"""
 
-# This doesnt need a session_name
 CHAT_HIST_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS chat_history (
     

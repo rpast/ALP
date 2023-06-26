@@ -35,6 +35,11 @@
                             <input type="text" id="collection_name" name="collection_name">
                             <label for="pdf">Select pdf:</label>
                             <input type="file" name="pdf" accept=".pdf">
+                            <label for="embed_method">Select embed method:</label>
+                            <select id="embed_method" name="embed_method">
+                                <option value="SBERT">SBERT</option>
+                                <option value="openai">Open AI (legacy)</option>
+                            </select>
                         </div>
 
                         <div class="form-group">
@@ -47,7 +52,12 @@
                 </div>
 
                 <div class="right-side">
-                    <p>Upload a pdf to a new collection.</p>
+                    <p>
+                        Upload a pdf to a new collection.
+                    </p>
+                    <p>
+                        If you choose Open AI as embedding method, you will get charged as per their current pricing table.
+                    </p>
                     <p id="conditional-text" style="color: #ff00ff">(ﾉ☉ヮ⚆)ﾉ ⌒*:･ﾟ✧</p>
                 </div>
 

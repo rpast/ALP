@@ -3,7 +3,7 @@
 
 import openai
 import pandas as pd
-import oai_tool as oai
+import ai_tools as oai
 
 class Chatbot:
     def __init__(self):
