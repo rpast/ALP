@@ -89,13 +89,14 @@ def process_collection():
     pages_processed_df['doc_uuid'] = [cproc.create_uuid() for x in range(pages_processed_df.shape[0])]
 
 
-    # Get the embedding cost
-    embedding_cost = round(cproc.embed_cost(pages_processed_df),4)
-    # express embedding cost in dollars
-    embedding_cost = f"${embedding_cost}"
-    # doc_length = pages_processed_df.shape[0]
-    # length_warning = doc_length / 600 > 1
-    print(f"Embedding cost as per Open AI pricing = .0004$: {embedding_cost}")
+    if embed_method == 'openai':
+        # Get the embedding cost
+        embedding_cost = round(cproc.embed_cost(pages_processed_df),4)
+        # express embedding cost in dollars
+        embedding_cost = f"${embedding_cost}"
+        # doc_length = pages_processed_df.shape[0]
+        # length_warning = doc_length / 600 > 1
+        print(f"Embedding cost as per Open AI pricing .0004$ = {embedding_cost}")
 
     pages_embed_df = cproc.embed_pages(pages_processed_df, method=embed_method)
 

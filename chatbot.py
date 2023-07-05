@@ -1,20 +1,22 @@
-"""Functions that handle chatbot interactions.
+"""ALP general chatbot class
 """
 
 import openai
 import pandas as pd
-import ai_tools as oai
+import ai_tools as ait
 import params as prm
 
 class Chatbot:
+    """Generic chatbot class
+    """
 
     def __init__(self):
         self.sys_message = {
             'role': 'system',
             'content':  """
-                You are a helpful assistant. You provide only factual information. 
-                When you do not know the answer, you say it. Wherever you can, you provide sources.
-                I will provide my query after INP tag, and the context you will use in your answer after following tags: 
+                You are a helpful assistant. You provide only factual information base don provided context. 
+                When you do not know the answer, you say it. Wherever you can, you provide sources or page numbers.
+                I will provide my query after INP tag. I will provide context you will use in your answer after following tags: 
                 SRC - context from source text we are talking about; 
                 QRY - one of previous inputs from current conversation that may be relevant to the current INP; 
                 RPL - one of your previous replies from current conversation that may be relevant to current INP.
@@ -54,6 +56,7 @@ class Chatbot:
 
         return api_response
     
+
     def retrieve_closest_idx(self, q, n, src, usr, ast):
         """Retrieves n closest samples from recall tables.
         Acts as a simple nearest neighbors search with cosine similarity.
@@ -69,7 +72,7 @@ class Chatbot:
             self.recall_source_idx = []
         else:
             # Get the context most relevant to user's question
-            recall_source_id = oai.order_document_sections_by_query_similarity(q, src)[0:n]
+            recall_source_id = ait.order_document_sections_by_query_similarity(q, src)[0:n]
             if len(recall_source_id)>1:
                 # If recal source id is a list n>1, join the text from the list
                 self.recall_source_idx = [x[1] for x in recall_source_id]
@@ -83,7 +86,7 @@ class Chatbot:
             print('No context found in user chat history')
             self.recall_user_idx = []
         else:
-            self.recall_user_idx = oai.order_document_sections_by_query_similarity(q, usr)[0][1]
+            self.recall_user_idx = ait.order_document_sections_by_query_similarity(q, usr)[0][1]
 
         ## GET RPL context
         # We get most relevant context from the agent's previous messages here
@@ -91,7 +94,7 @@ class Chatbot:
             print('No context found agent chat history')
             self.recall_assistant_idx = []
         else:
-            self.recall_assistant_idx = oai.order_document_sections_by_query_similarity(q, ast)[0][1]
+            self.recall_assistant_idx = ait.order_document_sections_by_query_similarity(q, ast)[0][1]
 
 
     def retrieve_text(self, src, chat):

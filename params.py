@@ -21,13 +21,14 @@ SESSION_TABLE_NAME = 'session'
 
 
 TOKEN_THRES = 500 # Number of tokens to split the document into chunks
-NUM_SAMPLES = 8 # Number of samples to take from the document
+NUM_SAMPLES = 7 # Number of samples to take from the document
 
 # List of available models
 OPENAI_MODEL = 'gpt-3.5-turbo'
 OPENAI_MODEL_16K = 'gpt-3.5-turbo-16k'
 OPENAI_MODEL_V4 = 'gpt-4'
 OPENAI_MODEL_V4_32K = 'gpt-4-32k'
+
 OPENAI_MODEL_EMBEDDING = 'text-embedding-ada-002'
 SENTENCE_TRANSFORMER_MODEL = 'multi-qa-MiniLM-L6-cos-v1'
 

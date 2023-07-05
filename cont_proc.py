@@ -1,3 +1,6 @@
+"""Content processing utilities
+"""
+
 import re 
 import uuid
 import pickle
@@ -120,25 +123,26 @@ def prepare_for_embed(pages_df, collection_name, model):
     # Further dataframe processing
     return (
         pages_df
-        # .drop(columns=['contents_split']) # Drop contents_split column
-        .reset_index() # Reset index so chapter names are stored in columns
-        .rename(columns={'index': 'page'}) # Rename index column to page
-        .assign(name=collection_name) # Add session_name column
-        .assign(interaction_type='source') ## Add interaction type column
-        .assign(timestamp=0) # Add timestamp column
-        .assign(embedding_model=model) # Add embedding model column
+        .reset_index() # Reset index so page numbers get stored in column
+        .rename(columns={'index': 'page'})
+        .assign(name=collection_name)
+        .assign(interaction_type='source')
+        .assign(timestamp=0)
+        .assign(embedding_model=model)
         [['name', 'interaction_type', 'text', 'text_token_no', 'page', 'timestamp', 'embedding_model']]
     )
 
 
 def embed_cost(pages_contents_long_df, price_per_k=0.0004):
-    """Calculate the cost of running the model to get embeddings"""
+    """Calculate the cost of running the Open AI model to get embeddings
+    """
     embed_cost = (pages_contents_long_df['text_token_no'].sum() / 1000) * price_per_k
     return embed_cost
 
 
 def embed_pages(pages_contents_long_df, method):
     """Get embeddings for each page"""
+
     # Get embeddings for each page
     if method == 'openai':
         print(f'!Sending pages to Open AI for embedding with {prm.OPENAI_MODEL}')
@@ -156,7 +160,8 @@ def embed_pages(pages_contents_long_df, method):
 
 def convert_table_to_dct(table):
     """Converts table to dictionary of embeddings
-    As Pandas df.to_dict() makes every value a string we need to convert it to list of loats before passing it to the model
+    As Pandas df.to_dict() makes every value a string, 
+    we need to convert it to list of floats before passing it to the model
     """
     table_dct = table[['embedding']].to_dict()['embedding']
     for k, v in table_dct.items():
@@ -166,7 +171,7 @@ def convert_table_to_dct(table):
 
 
 def prepare_chat_recall(chat_table):
-    """Prepare chat recall table for chatbot memory
+    """Prepare chat recall table for chatbot memory build
     """
     usr_f = (chat_table['interaction_type'] == 'user')
     ast_f = (chat_table['interaction_type'] == 'assistant')
