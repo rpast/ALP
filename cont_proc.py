@@ -67,7 +67,7 @@ def pages_to_dict(pages):
 
 
 def pages_to_dataframe(pages):
-    """Convert dictionary of pages to dataframe"""
+    """Convert dictionary of pages to Pandas dataframe"""
     pages_dct = pages_to_dict(pages)
     # # Grab contents into a dataframe
     doc_contents_df = pd.DataFrame(pages_dct, index=['contents']).T
@@ -89,28 +89,32 @@ def split_pages(pages_df, method):
         lambda x: [x[i:i+prm.TOKEN_THRES] for i in range(1, len(x), prm.TOKEN_THRES)]
     )
 
-    # Explode the split contents
+    # At this point the tokenized text is split by set threshold into an n element list
+    # We want to explode that list into rows and perserve index that tracks the src page
     pages_contents_long_df = pages_df.explode(
         column='contents_tokenized'
     )[['contents_tokenized']]
 
+    # track # of tokens in each text snippet
     pages_contents_long_df['text_token_no'] = pages_contents_long_df['contents_tokenized'].apply(
         lambda x: len(x)
     )
 
+    # decode tokens back into text (SBERT default)
     pages_contents_long_df['contents'] = pages_contents_long_df['contents_tokenized'].apply(
-        lambda x: decode_tokens(x)
+        lambda x: decode_tokens(x, method=method)
     )
 
     return pages_contents_long_df
 
 
 def prepare_for_embed(pages_df, collection_name, model):
-    """Pre-process pages to be embedded
+    """Pre-process dataframe that holds src pages to be embedded by chosen model
     returns a dataframe with the following columns:
     name, interaction_type, text, text_token_no, page, timestamp
     """
-    # Form text column for each fragment
+
+    # Form text column for each fragment, we will later use it as the source text for embedding
     pages_df['text'] = "PAGE: " + pages_df.index.astype(str) + " CONTENT: " + pages_df['contents']
 
     # Further dataframe processing

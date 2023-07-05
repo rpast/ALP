@@ -15,7 +15,6 @@ class DatabaseHandler:
     """Handles the database connection and queries. One instance per database file.
     """
 
-    
     def __init__(self, db_file):
         """Create a new database file if it doesn't exist, otherwise connect to the existing database file."""
         self.db_file = db_file
@@ -343,5 +342,3 @@ class DatabaseHandler:
             print(e)
 
             return False
-
-

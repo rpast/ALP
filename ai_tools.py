@@ -1,6 +1,12 @@
+"""Collection of utilities to interact with or extend of standard model capabilities
+"""
+
+import tiktoken
+import openai
+import time
 import params as prm
-import tiktoken, openai, time
 import numpy as np
+
 from sentence_transformers import SentenceTransformer
 from transformers import BertTokenizer
 
@@ -63,14 +69,17 @@ def get_embedding_sbert(
     """Returns the embedding for a given text.
     Makes use of Sentence-BERT (SBERT) to embed the text.
     """
+
     model = SentenceTransformer(model)
     embedding = model.encode(text)
+    
     return embedding
 
 
 def vector_similarity(x, y):
     """
-    Returns the similarity between two vectors.
+    Returns a dot product of two vectors. For embedding values between 0 and 1 it is an equivalent
+    of cosine similarity.
     """
 
     # Catch all ys that are not lists or arrays
@@ -98,6 +107,7 @@ def order_document_sections_by_query_similarity(query, contexts):
     
     Return the list of document sections, sorted by relevance in descending order.
     """
+    
     # TODO: probable inefficiency - this embedding is later calculated
     # again downstream when saving to the database.
     query_embedding = get_embedding_sbert(query)

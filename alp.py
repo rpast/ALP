@@ -314,14 +314,9 @@ def ask():
     ## Grab the page number from the recall table
     ## It will become handy when user wants to know from which chapter the context was taken
 
-    if len(chatbot.recall_source_idx)>1:
-        recall_source_pages = recall_table_context.loc[chatbot.recall_source_idx]['page'].to_list()
-    elif len(chatbot.recall_source_idx)==1:
-        recall_source_pages = recall_table_context.loc[chatbot.recall_source_idx]['page']
-    else:
-        recall_source_pages = 'No context found'
-
-    print(f'I will base on the following context: {set(recall_source_pages)}')
+    recall_source_pages = recall_table_context.loc[chatbot.recall_source_idx][['page','text']]
+    print(f'I will base on the following context:')
+    print(recall_source_pages)
     print('\n')
 
 
