@@ -126,6 +126,13 @@ ALP app interface consists of couple of sections:
 * In ALP - SESSION window you can have a conversation over collections linked to the session. Each time a similarity score is calculated between user's query and collections' embeddings, a list of most similar datasources is printed in the program's console. These sources will be passed as a context with the user's question to the GPT model.
 
 ## Screenshots
+<img src='https://github.com/rpast/ALP/blob/dmodel_updt/static/alp-hub.png?raw=true' width='600'></src>
+<br>
+<img src='https://github.com/rpast/ALP/blob/dmodel_updt/static/alp-session-mgr.png?raw=true' width='600'></src>
+<br>
+<img src='https://github.com/rpast/ALP/blob/dmodel_updt/static/chat1.png?raw=true' width='600'></src>
+<br>
+<img src='https://github.com/rpast/ALP/blob/dmodel_updt/static/chat2.png?raw=true' width='600'></src>
 
 
 
