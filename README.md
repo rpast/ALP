@@ -6,6 +6,7 @@ This is a second iteration of the script. New features include:
 * New data model that decouples sessions (chat conversations) and collections (pdf resources). Thanks to that, user session can point to one or more pdf resource. Also, altering the conversation does not affect the embbeddings stored in the database. 
 * [SBERT](https://www.sbert.net/) provides embedding model instead of Open AI. This reduces costs and increases performance. Open AI's Ada left as a legacy model. 
 
+_1st iteration version bak on ALP_1st_iter_bak branch_
 
 ## Overview
 
