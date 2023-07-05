@@ -4,6 +4,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from transformers import BertTokenizer
 
+
 #TODO: bug - warning is printed even though we dont want it
 def get_tokens(message, method='SBERT'):
     """Count number of tokens in a message

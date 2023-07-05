@@ -4,26 +4,36 @@
 import openai
 import pandas as pd
 import ai_tools as oai
+import params as prm
 
 class Chatbot:
+
     def __init__(self):
         self.sys_message = {
             'role': 'system',
-            'content':  "You are a helpful assistant. You provide only factual information. When you do not know the answer, you say it. I will provide my input after INP tag. I will pass the context you will use in your answer. I encode it with following tags: SRC - context coming from source document, article, book, text we are talking about; QRY - one of previous inputs I passed to you in current conversation; RPL - one of your previous replies to my questions from current conversation."
+            'content':  """
+                You are a helpful assistant. You provide only factual information. 
+                When you do not know the answer, you say it. Wherever you can, you provide sources.
+                I will provide my query after INP tag, and the context you will use in your answer after following tags: 
+                SRC - context from source text we are talking about; 
+                QRY - one of previous inputs from current conversation that may be relevant to the current INP; 
+                RPL - one of your previous replies from current conversation that may be relevant to current INP.
+            """
         }
 
     def build_prompt(self, 
                     prev_usr, 
-                    prev_agnt, 
+                    prev_asst, 
                     recall_src, 
                     recall_usr, 
                     recall_ast, 
                     question):
         """Builds prompt for the chatbot.
+        Returns a list of dicts
         """
 
         self.prev_user = {"role": "user", "content": f"{prev_usr}"}
-        self.prev_assistant = {"role": "assistant", "content": f"{prev_agnt}"}
+        self.prev_assistant = {"role": "assistant", "content": f"{prev_asst}"}
         self.user_message = {
             "role": "user", 
             "content": f"SRC: {recall_src}. QRY: {recall_usr}. RPL: {recall_ast}. INP: {question}"
@@ -36,8 +46,9 @@ class Chatbot:
         """Makes API call to OpenAI's chat completion endpoint.
         """
 
+        #TODO: user can choose variant of GPT model
         api_response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model=prm.OPENAI_MODEL_16K,
             messages=msg
         )
 

@@ -9,13 +9,12 @@ from flask import Flask, request, session, render_template, redirect, url_for, j
 from langchain.document_loaders import PyPDFLoader
 
 ## Local modules import
-from chatbot import Chatbot
-import params as prm
 import cont_proc as cproc
+import params as prm
+from chatbot import Chatbot
 from db_handler import DatabaseHandler
-from ai_tools import get_tokens
 
-# Serve app to prod
+# Serve to prod
 import webbrowser
 from waitress import serve
 from threading import Timer
@@ -68,7 +67,7 @@ def process_collection():
     # Process the collection
     file_ = request.files['pdf']
     file_name = cproc.process_name(file_.filename)
-    collection_source = file_name
+    # collection_source = file_name
 
     # Save the file to the upload folder
     saved_fname = collection_name + '_' + file_name
@@ -90,29 +89,27 @@ def process_collection():
     pages_processed_df['doc_uuid'] = [cproc.create_uuid() for x in range(pages_processed_df.shape[0])]
 
 
-    # TODO: Switch to Hugging Face API with embedding model
     # Get the embedding cost
     embedding_cost = round(cproc.embed_cost(pages_processed_df),4)
     # express embedding cost in dollars
     embedding_cost = f"${embedding_cost}"
-    doc_length = pages_processed_df.shape[0]
-    length_warning = doc_length / 600 > 1
-    print(f"Embedding cost: {embedding_cost}")
+    # doc_length = pages_processed_df.shape[0]
+    # length_warning = doc_length / 600 > 1
+    print(f"Embedding cost as per Open AI pricing = .0004$: {embedding_cost}")
 
-    if length_warning != True:
+    pages_embed_df = cproc.embed_pages(pages_processed_df, method=embed_method)
 
-        pages_embed_df = cproc.embed_pages(pages_processed_df, method=embed_method)
-
-        with db as db_conn:
-            db_conn.insert_context(pages_embed_df.drop(columns=['embedding']))
-            # rename from doc_uuid to uuid needed to fit table structure
-            db_conn.insert_embeddings(pages_embed_df[['doc_uuid', 'embedding']].rename(columns={'doc_uuid':'uuid'}))
+    with db as db_conn:
+        db_conn.insert_context(pages_embed_df.drop(columns=['embedding']))
+        # rename from doc_uuid to uuid needed to fit table structure
+        db_conn.insert_embeddings(pages_embed_df[['doc_uuid', 'embedding']].rename(columns={'doc_uuid':'uuid'}))
         
     return render_template(
             'collection_manager.html'
             )
 
-# Create /session_manager route
+# Session_manager allows users to create new sessions or continue
+# ones already created.
 @app.route('/session_manager', methods=['GET', 'POST'])
 def session_manager():
     """Session manager
@@ -155,8 +152,6 @@ def process_session():
     session['SESSION_DATE'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     ## Get the data from the form
-    # Pass API key right to the openai object
-    # openai.api_key = request.form['api_key']
 
     #determine if use clicked session_create or session_start
     session_action = request.form.get('session_action', 0)
@@ -251,6 +246,7 @@ def ask():
     data = request.get_json()
     question = data['question']
 
+
     # Handle chat memory and context    
     with db as db_conn:
         print('!Loading chat history for interaction')
@@ -277,7 +273,10 @@ def ask():
     if recall_table_source.shape[0] < prm.NUM_SAMPLES:
         # This should happen for short documents otherwise this suggests a bug (usually with session name)
         num_samples = recall_table_source.shape[0]
-        print('!WARNING! Source material is shorter than number of samples you want to get. Setting number of samples to the number of source material sections.')
+        print("""
+            !WARNING! Source material is shorter than number of samples you want to get. 
+            Setting number of samples to the number of source material sections.
+            """)
 
 
     # Get the closest index - This will update index attributes of chatbot object
@@ -322,8 +321,9 @@ def ask():
     else:
         recall_source_pages = 'No context found'
 
-    print(f'I will answer your question basing on the following context: {set(recall_source_pages)}')
+    print(f'I will base on the following context: {set(recall_source_pages)}')
     print('\n')
+
 
     # Build prompt
     message = chatbot.build_prompt(
@@ -344,10 +344,12 @@ def ask():
     # TODO: flash it on the front-end
     
     #TODO: bug with message passed to encoder!
-    token_passed = len(get_tokens(message))
-    context_capacity =  4096 - token_passed
-    print(f"Number of tokens passed to the model: {token_passed}")
-    print(f"Number of tokens left in the context: {context_capacity}")
+    
+    token_passed = len('; '.join([x['content'] for x in message]))
+    context_capacity = 16384 - token_passed
+    # context_capacity =  4096 - token_passed
+    print(f'# Tokens passed to the model: {token_passed}')
+    print(f'# Tokens left in the context: {context_capacity}')
 
 
     # generate response
@@ -420,8 +422,8 @@ def open_browser():
 
 if __name__ == '__main__':
 
-    ## Load key from api_key.txt THIS IS FOR DEV ONLY
-    with open('/home/nf/Documents/projekty/ai_apps/ALP/ALP/static/data/api_key.txt') as f:
+    ## Load key from api_key.txt
+    with open('./api_key.txt') as f:
         key_ = f.read()
         openai.api_key = key_
 

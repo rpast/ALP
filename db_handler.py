@@ -103,6 +103,7 @@ class DatabaseHandler:
             print(e)
 
 
+
     def insert_session(self, uuid, col_uuid, sname, sdate) -> bool:
         """Insert session data into the database's Sessions table.
         :param sname: session name
@@ -125,7 +126,6 @@ class DatabaseHandler:
             print(e)
 
 
-
     def insert_context(self, context_df, table_name='collections', if_exist='append'):
         """Insert context data into the database
         :param context_df: context dataframe
@@ -144,6 +144,7 @@ class DatabaseHandler:
             print(e)
             return False
 
+
     def insert_embeddings(self, embedding_df, table_name='embeddings', if_exist='append'):
         """Insert embeddings data into the database
         :param embedding_df: embeddings dataframe
@@ -161,6 +162,7 @@ class DatabaseHandler:
         except Exception as e:
             print(e)
             return False
+
 
     def insert_interaction(
             self, 
@@ -245,6 +247,7 @@ class DatabaseHandler:
 
             return None
         
+
     def load_embeddings(self, context_df) -> pd.DataFrame:
         """enchance context_df with embeddings using sql query
         """
@@ -268,6 +271,7 @@ class DatabaseHandler:
         except Exception as e:
             print(e)
             return None
+
 
 
     def load_collections(self, session_uuid) -> list:

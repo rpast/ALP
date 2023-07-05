@@ -1,7 +1,7 @@
-"""This file contains all the parameters for the project
+"""Contains static parameters for the project
 """
 
-import os, sys
+import os
 from pathlib import Path
 
 
@@ -17,27 +17,36 @@ DB_NAME = 'app.db'
 DB_PATH = os.path.join(DB_FOLDER, DB_NAME)
 
 CNT_TABLE_NAME = 'context'
-CNT_INTERIM_TABLE_NAME = 'interim_context'
 SESSION_TABLE_NAME = 'session'
 
 
 TOKEN_THRES = 500 # Number of tokens to split the document into chunks
-NUM_SAMPLES = 5 # Number of samples to take from the document
+NUM_SAMPLES = 8 # Number of samples to take from the document
 
+# List of available models
 OPENAI_MODEL = 'gpt-3.5-turbo'
+OPENAI_MODEL_16K = 'gpt-3.5-turbo-16k'
+OPENAI_MODEL_V4 = 'gpt-4'
+OPENAI_MODEL_V4_32K = 'gpt-4-32k'
 OPENAI_MODEL_EMBEDDING = 'text-embedding-ada-002'
 SENTENCE_TRANSFORMER_MODEL = 'multi-qa-MiniLM-L6-cos-v1'
 
 
 # Model context management
-SUMMARY_CTXT_USR = "How would you act when I'd ask you what this document is about. Can you summarize it for me?"
-SUMMARY_TXT_ASST = "When a user asks me to summarize the source material or explain what it is about, I would look for the best text fragment that provides general information about the document's contents. To find a text fragment for summarization, I suggest starting by scanning the abstract and conclusion sections, and also checking the table of contents."
+SUMMARY_CTXT_USR = """
+    How would you act when I'd ask you what's this document about or ask you to summarize source text?
+    """
+SUMMARY_TXT_ASST = """
+    When a user asks me to summarize the source material or explain what it is about, 
+    I would look for the best text fragment that provides general information about the document's contents. 
+    To find a text fragment for summarization, I would start with the abstract and conclusion sections, 
+    and also I'd check the table of contents.
+    """
 
 
-## SQL parameters ##
-# Session name is defined by the user
+## DB parameters ##
+# used when new db initialized under static/data/dbs/
 
-# TODO: session_source not needed
 SESSION_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS session (
     
