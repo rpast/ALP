@@ -5,6 +5,8 @@
 /static/data/uploads/*
 !static/data/uploads/info.txt
 
+_archive/
+
 api_key.txt
 devlog.txt
 
