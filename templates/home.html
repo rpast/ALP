@@ -23,61 +23,45 @@
 
         <div class="card"> <!-- Card is a basic UI object -->
             <div class="card-header">
-                <span>ALP - Session details</span>
+                <span>ALP - HUB</span>
             </div>
             
             <div class="container-menu">
                 <div class="content">
-                    
-                    <form action="/proc_session" method="post" enctype="multipart/form-data" class="form-container">
+                    <form action="/collection_manager" method="post" enctype="multipart/form-data" class="form-container">
                         <div class="form-group">
-                            <label for="api_key">API Key:</label>
-                            <input type="password" id="api_key" name="api_key" required>
+                            <label for="collection_manager">Manage collections</label>
+                            <input type="submit" id="collection_manager" value="Collections">
                         </div>
+                    </form>
+                
+                    <form action="/session_manager" method="post" enctype="multipart/form-data" class="form-container">
                         <div class="form-group">
-                            <label for="existing_session">You can select existing session:</label>
-                            <select id="existing_session" name="existing_session">
-                                <option value="" selected>Session name</option>
-                                {% for session_name in session_names %}
-                                <option value="{{ session_name }}">{{ session_name }}</option>
-                                {% endfor %}
-                            </select>
-                            
-                        </div>
-                        <div class="form-group">
-                            <label for="new_session_name">Or set a new one:</label>
-                            <input type="text" id="new_session_name" name="new_session_name">
-                        </div>
-                        <div class="form-group">
-                            <input type="file" name="pdf" accept=".pdf" required>
-                        </div>
-                        <div class="form-group">
-                        <input type="submit" id="proceed" value="Session start">
+                            <label for="session_manager">Launch a session</label>
+                            <input type="submit" id="session_manager" value="Sessions">
                         </div>
                     </form>
                 </div>
+                
+
                 <div class="right-side">
                     <p>
-                        This is knowledge-grounded conversational AI system.
+                        ALP is a knowledge-grounded conversational AI system.
                     </p>
                     <p>
-                        The system is designed to enhance the accuracy of responses of GPT-3.5 model related to a specific PDF document by using a retrieval augmentation technique. 
-                    </p>
+                        The system enhances the accuracy of responses of GPT model related to a specific PDF document by using a retrieval augmentation technique.
                     <p>
-                        You will need Open AI API key to use the system. You can get it <a href="https://platform.openai.com/" target="_blank">here</a>. Note that since ALP operates as local server your key is safe.
+                        You need an OpenAI API key to use ALP. 
+                        You can get it <a href="https://platform.openai.com/" target="_blank">here</a>. 
+                        Note that since ALP operates via localhost your API key is safe.
                     </p>
-                    <p id="conditional-text" style="color: #16b4a2">(ﾉ☉ヮ⚆)ﾉ ⌒*:･ﾟ✧</p>
+                    <p id="conditional-text" style="color: #ff00ff">(ﾉ☉ヮ⚆)ﾉ ⌒*:･ﾟ✧</p>
                 </div>
+
             </div>
         </div>
 
     </div>
-
-    <!-- Pass session names from backend -->
-    <script>
-        var sessionNames = {{ session_names|tojson|safe }};
-    </script>
-    <script src='../static/scripts/home.js'></script>
 </body>
 </html>
 

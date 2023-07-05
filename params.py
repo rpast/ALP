@@ -1,7 +1,7 @@
-"""This file contains all the parameters for the project
+"""Contains static parameters for the project
 """
 
-import os, sys
+import os
 from pathlib import Path
 
 
@@ -17,68 +17,78 @@ DB_NAME = 'app.db'
 DB_PATH = os.path.join(DB_FOLDER, DB_NAME)
 
 CNT_TABLE_NAME = 'context'
-CNT_INTERIM_TABLE_NAME = 'interim_context'
 SESSION_TABLE_NAME = 'session'
 
 
 TOKEN_THRES = 500 # Number of tokens to split the document into chunks
-NUM_SAMPLES = 5 # Number of samples to take from the document
+NUM_SAMPLES = 7 # Number of samples to take from the document
+
+# List of available models
+OPENAI_MODEL = 'gpt-3.5-turbo'
+OPENAI_MODEL_16K = 'gpt-3.5-turbo-16k'
+OPENAI_MODEL_V4 = 'gpt-4'
+OPENAI_MODEL_V4_32K = 'gpt-4-32k'
+
+OPENAI_MODEL_EMBEDDING = 'text-embedding-ada-002'
+SENTENCE_TRANSFORMER_MODEL = 'multi-qa-MiniLM-L6-cos-v1'
 
 
 # Model context management
-SUMMARY_CTXT_USR = "How would you act when I'd ask you what this document is about. Can you summarize it for me?"
-SUMMARY_TXT_ASST = "When a user asks me to summarize the source material or explain what it is about, I would look for the best text fragment that provides general information about the document's contents. To find a text fragment for summarization, I suggest starting by scanning the abstract and conclusion sections, and also checking the table of contents."
+SUMMARY_CTXT_USR = """
+    How would you act when I'd ask you what's this document about or ask you to summarize source text?
+    """
+SUMMARY_TXT_ASST = """
+    When a user asks me to summarize the source material or explain what it is about, 
+    I would look for the best text fragment that provides general information about the document's contents. 
+    To find a text fragment for summarization, I would start with the abstract and conclusion sections, 
+    and also I'd check the table of contents.
+    """
 
 
-## SQL parameters ##
-# Session name is defined by the user
+## DB parameters ##
+# used when new db initialized under static/data/dbs/
 
-INTERIM_CONTEXT_TABLE_SQL = """
-    CREATE TABLE IF NOT EXISTS interim_context (
+SESSION_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS session (
+    
         uuid TEXT NOT NULL,
-        session_name TEXT NOT NULL,
-        interaction_type TEXT NOT NULL,
-        text TEXT NOT NULL,
-        text_token_no INTEGER,
-        page INTEGER
+        collection_uuid TEXT NOT NULL,
+    
+        name TEXT NOT NULL,
+        date TEXT NOT NULL
         )"""
 
-
-CONTEXT_TABLE_SQL = """
-    CREATE TABLE IF NOT EXISTS context (
+EMBEDDINGS_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS embeddings (
+    
         uuid TEXT NOT NULL,
-        session_name TEXT NOT NULL,
+        embedding BLOB NOT NULL
+        )"""
+
+COLLECTIONS_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS collections (
+        
+        uuid TEXT NOT NULL,
+        doc_uuid TEXT NOT NULL,
+
+        name TEXT NOT NULL,
         interaction_type TEXT NOT NULL,
         text TEXT NOT NULL,
         text_token_no INTEGER,
         page INTEGER,
-        embedding TEXT NOT NULL,
-        edges TEXT,
-        timestamp INTEGER
+        timestamp INTEGER,
+        embedding_model TEXT NOT NULL
         )"""
 
-SESSION_TABLE_SQL = """
-    CREATE TABLE IF NOT EXISTS session (
-        uuid TEXT NOT NULL,
-        session_name TEXT NOT NULL,
-        session_date TEXT NOT NULL,
-        session_source TEXT NOT NULL
-        )"""
-
-CHAT_HIST_TABLE = """
+CHAT_HIST_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS chat_history (
+    
         uuid TEXT NOT NULL,
-        session_name TEXT NOT NULL,
+        doc_uuid TEXT NOT NULL,
+
         interaction_type TEXT NOT NULL,
         text TEXT NOT NULL,
         text_token_no INTEGER,
-        embedding BLOB NOT NULL,
+        page INTEGER,
         timestamp INTEGER
-        )"""
-
-# uuid is a FK -> context table, chat_history table
-EMBEDDINGS_TABLE_SQL = """
-    CREATE TABLE IF NOT EXISTS embeddings (
-        uuid TEXT NOT NULL,
-        embedding BLOB NOT NULL
         )"""

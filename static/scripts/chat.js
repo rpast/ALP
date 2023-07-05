@@ -20,7 +20,7 @@ function renderChatHistory(chatHistory) {
     // If chat history is empty, display the agent's message
     if (chatHistory.length === 0) {
         const messageElement = document.createElement("p");
-        messageElement.innerHTML = "<strong>Agent:</strong> Hi! Let's talk about your document.";
+        messageElement.innerHTML = "<strong>Agent:</strong> Hi! Let's talk about your sources.";
         responseDiv.appendChild(messageElement);
     }
 

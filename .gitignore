@@ -9,6 +9,7 @@ _archive/
 
 api_key.txt
 devlog.txt
+db_schema.txt
 
 # virtualenv
 alp_venv/

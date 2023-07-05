@@ -1,25 +1,25 @@
 import os
 import io
-import re
 import time
 import openai
 import datetime
+import ast
 
 from flask import Flask, request, session, render_template, redirect, url_for, jsonify, send_file
 from langchain.document_loaders import PyPDFLoader
 
 ## Local modules import
-from chatbot import Chatbot
-import params as prm
 import cont_proc as cproc
+import params as prm
+from chatbot import Chatbot
 from db_handler import DatabaseHandler
-import oai_tool as oai
 
-# Serve app to prod
+# Serve to prod
 import webbrowser
 from waitress import serve
 from threading import Timer
 
+##########################################################################################
 
 # Set up paths
 template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
@@ -33,225 +33,208 @@ app = Flask(
     static_folder=static_folder
     )
 
-
 app.secret_key = os.urandom(24)
 
-
-# Intitiate database if not exist
-db_exist = os.path.exists(prm.DB_PATH)
-if not db_exist:
-    db = DatabaseHandler(prm.DB_PATH)
-    db.write_db(prm.SESSION_TABLE_SQL)
-    db.write_db(prm.INTERIM_CONTEXT_TABLE_SQL)
-    db.write_db(prm.CONTEXT_TABLE_SQL)
-    db.write_db(prm.EMBEDDINGS_TABLE_SQL)
-    db.close_connection()
-else:
-    db = DatabaseHandler(prm.DB_PATH)
-    db.close_connection()
-
-
-# Spin up chatbot instance
-chatbot = Chatbot()
-print("!Chatbot initialized")
-
+###########################################################################################
 
 # Render home page
 @app.route('/')
 def home():
-    db.create_connection()
-    # Load session names from the database
-    if db.load_session_names() is not None:
-        session_names = [x[0] for x in db.load_session_names()]
-        session_dates = [x[1] for x in db.load_session_names()]
-        # extract from session dates only the date YYYY-MM-DD
-        session_dates = [x.split()[0] for x in session_dates]
-        sessions = list(zip(session_names, session_dates))
-    else:
-        sessions = []
-    db.close_connection()
-
     return render_template(
-        'home.html', 
-        session_names=sessions
+        'home.html'
         )
 
+@app.route('/collection_manager', methods=['GET', 'POST'])
+def collection_manager():
+    # TODO: fetch collections from database and pass them so they can be displayed
+    return render_template(
+            'collection_manager.html'
+            )
 
-@app.route('/proc_session', methods=['POST'])
-def proc_session():
+# create /process_collection route
+@app.route('/process_collection', methods=['POST'])
+def process_collection():
+    """Process collection
+    Process the collection of documents.
+    """
+    print("!Processing collection")
+
+    # Get the data from the form
+    collection_name = request.form['collection_name']
+    embed_method = request.form['embed_method']
+    collection_name = cproc.process_name(collection_name)
+
+    # Process the collection
+    file_ = request.files['pdf']
+    file_name = cproc.process_name(file_.filename)
+    # collection_source = file_name
+
+    # Save the file to the upload folder
+    saved_fname = collection_name + '_' + file_name
+    fpath = os.path.join(prm.UPLOAD_FOLDER, saved_fname)
+    file_.save(fpath)
+    print(f"!File saved to: {fpath}")
+
+    # Load the pdf & process the text
+    loader = PyPDFLoader(fpath) # langchain simple pdf loader
+    pages = loader.load_and_split() # split by pages
+
+    # Process text data further so it fits the context mechanism
+    pages_df = cproc.pages_to_dataframe(pages)
+    pages_refined_df = cproc.split_pages(pages_df, method=embed_method)
+    pages_processed_df = cproc.prepare_for_embed(pages_refined_df, collection_name, embed_method)
+
+    # Add UUIDs to the dataframe!
+    pages_processed_df['uuid'] = cproc.create_uuid()
+    pages_processed_df['doc_uuid'] = [cproc.create_uuid() for x in range(pages_processed_df.shape[0])]
+
+
+    if embed_method == 'openai':
+        # Get the embedding cost
+        embedding_cost = round(cproc.embed_cost(pages_processed_df),4)
+        # express embedding cost in dollars
+        embedding_cost = f"${embedding_cost}"
+        # doc_length = pages_processed_df.shape[0]
+        # length_warning = doc_length / 600 > 1
+        print(f"Embedding cost as per Open AI pricing .0004$ = {embedding_cost}")
+
+    pages_embed_df = cproc.embed_pages(pages_processed_df, method=embed_method)
+
+    with db as db_conn:
+        db_conn.insert_context(pages_embed_df.drop(columns=['embedding']))
+        # rename from doc_uuid to uuid needed to fit table structure
+        db_conn.insert_embeddings(pages_embed_df[['doc_uuid', 'embedding']].rename(columns={'doc_uuid':'uuid'}))
+        
+    return render_template(
+            'collection_manager.html'
+            )
+
+# Session_manager allows users to create new sessions or continue
+# ones already created.
+@app.route('/session_manager', methods=['GET', 'POST'])
+def session_manager():
+    """Session manager
+    Manage sessions.
+    """
+    
+    # Load session names from the database
+    with db as db_conn:
+        # We want to see available sessions
+        if db_conn.load_session_names() is not None:
+            print('!Sessions found in database. Fetching sessions details')
+            session_names = [x[0] for x in db_conn.load_session_names()]
+            session_ids = [x[1] for x in db_conn.load_session_names()]
+
+            # extract from session dates only the date YYYY-MM-DD
+            # session_dates = [x.split()[0] for x in session_dates]
+
+            sessions = list(zip(session_names, session_ids))
+        else:
+            print('!No sessions found in database')
+            sessions = []
+        
+        # We want to see available collections
+        collections = db_conn.load_collections_all()
+
+    return render_template(
+            'session_manager.html',
+            sessions=sessions,
+            collections=collections
+            )
+
+#Create /process_session
+@app.route('/process_session', methods=['POST'])
+def process_session():
     """Process session
     Set the API key, session name, connect sources for new session.
     """
 
-    ## Get the data from the form
-    # Pass API key right to the openai object
-    openai.api_key = request.form['api_key']
+    session['UUID'] = cproc.create_uuid()
+    session['SESSION_DATE'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Grab session names from the form
-    new_session_name = request.form.get('new_session_name',0)
-    existing_session_name = request.form.get('existing_session',0)
+    ## Get the data from the form
+
+    #determine if use clicked session_create or session_start
+    session_action = request.form.get('session_action', 0)
 
     # Determine if we deal with new or existing session
-    if new_session_name != 0:
-        session['NEW_SESSION'] = True
-        session_name = new_session_name
-        session_date = datetime.datetime.fromtimestamp(time.time())
-    elif existing_session_name != 0:
-        session['NEW_SESSION'] = False
-        # session name and date comes as string. We need to extract them.
-        pattern = r"'(.*?)'"
-        existing_session_details = re.findall(pattern, existing_session_name)
-        session_name = existing_session_details[0]
-        session_date = existing_session_details[1]
+    # And handle session variables accordingly
 
-    # Make sure the session name is formatted correctly
-    session_name = cproc.process_name(session_name)
+    if session_action == 'Start':
+        name_grabbed = request.form.getlist('existing_session_name')
+        sesion_id = [ast.literal_eval(x)[1] for x in name_grabbed][0]
+        name = [ast.literal_eval(x)[0] for x in name_grabbed][0]
+        print('!Starting existing session: ', name)
+        session['SESSION_NAME'] = name
+        session['UUID'] = sesion_id
 
-    # Set session variables
-    session['SESSION_TIME'] = str(int(time.time()))
-    session['SESSION_DATE'] = str(session_date).split()[0]
-    session['SESSION_NAME'] = session_name
-
-    # New session has specific rules
-    if session['NEW_SESSION']:
-        # Logic for new session. 
-        # Insert session details to session table, populate the context table
-        # kick-off the embedding process
-        file_ = request.files['pdf']
-        file_name = cproc.process_name(file_.filename)
-        session['SESSION_SOURCE'] = file_name
-
-        # Generate session uuid
-        session_uuid = cproc.create_uuid()
-
-        # Save the file to the upload folder
-        saved_fname = session['SESSION_NAME'] + '_' + file_name
-        fpath = os.path.join(prm.UPLOAD_FOLDER, saved_fname)
-        file_.save(fpath)
-
-        # Load the pdf & process the text
-        loader = PyPDFLoader(fpath) # langchain simple pdf loader
-        pages = loader.load_and_split() # split by pages
-
-        # Process text data further so it fits the context mechanism
-        pages_df = cproc.pages_to_dataframe(pages)
-        pages_refined_df = cproc.split_pages(pages_df, session['SESSION_NAME'])
-        
-        # Get the embedding cost
-        embedding_cost = round(cproc.embed_cost(pages_refined_df),4)
-        # express embedding cost in dollars
-        embedding_cost = f"${embedding_cost}"
-        doc_length = pages_refined_df.shape[0]
-        length_warning = doc_length / 60 > 1
-
-        ## DMODEL IMPLEMENTATION
-        # create uuid for the context instances
-        pages_refined_df['uuid'] = [cproc.create_uuid() for x in range(pages_refined_df.shape[0])]  
-
-        # Populate session and interim context table
-        db.create_connection(prm.DB_PATH)
-        # BUG: session table doesnt exist (!?)
-        db.insert_session(session_uuid, session['SESSION_NAME'], session['SESSION_DATE'], session['SESSION_SOURCE'])
-        db.insert_context(pages_refined_df, table_name='interim_context', if_exist='replace')
-        db.close_connection()
-
-        return render_template(
-            'summary.html', 
-            session_uuid=session_uuid,
-            session_name=session_name, 
-            embedding_cost=embedding_cost,
-            doc_length=doc_length,
-            length_warning=length_warning
-            )
-    
-    # If we deal with existing session 
-    # Proceed to the chatbot
-    else:
         return redirect(
             url_for('index'))
 
 
-@app.route('/start_embedding', methods=['POST'])
-def start_embedding():
-    """Start the embedding process
-    """
+    elif session_action == 'Create':
+        session_name = request.form.get('new_session_name', 0)
+        session['SESSION_NAME'] = cproc.process_name(session_name)
+        print('!Creating new session: ', session['SESSION_NAME'])
 
-    # Load context data from interim table
-    db.create_connection(prm.DB_PATH)
-    pages_refined_df = db.load_context(
-        session['SESSION_NAME'], 
-        table_name='interim_context'
-        )
+        # grab collections from the form
+        collections = request.form.getlist('collections')
 
-    # Perform the embedding process here
-    print('Embedding process started...')
-    pages_embed_df = cproc.embed_pages(pages_refined_df)
-    print('Embedding process finished.')
-    ## TODO: use vectorstore to store embeddings
-    print('!!!!!', pages_embed_df['embedding'].dtype)
-    pages_embed_df['embedding'] = pages_embed_df['embedding'].astype(str)
-    # Prepare for future functionalities
-    pages_embed_df['edges'] = None
+        collection_ids = [ast.literal_eval(x)[0] for x in collections]
+        for collection_uuid in collection_ids:
+            with db as db_conn:
+                db_conn.insert_session(
+                    session['UUID'],
+                    collection_uuid,
+                    session['SESSION_NAME'],
+                    session['SESSION_DATE']
+                )
 
-    ## DMODEL UPDATE
-    ## Decouple context from embeddings
-    ## TODO: implement UUID for context
-    to_serialize_df = pages_embed_df[['session_name', 'embedding']]
-    embed_df = cproc.serialize_embedding(to_serialize_df)
-    print(embed_df.head())
-    #######################
-
-    # insert data with embedding to main context table with if exist = append.
-    db.insert_context(pages_embed_df)
-    db.close_connection()
-
-    # Proceed to the chatbot
-    return redirect(url_for('index'))
+        return redirect(
+            url_for('index'))
 
 
 @app.route('/interaction')
 def index():
-    """render interaction main page"""
+    """render interaction main page
+    """
 
     # Load chat history
-    db.create_connection(prm.DB_PATH)
-    chat_history = db.load_chat_history(session['SESSION_NAME'])
-    db.close_connection()
+    with db as db_conn:
+        print('!Loading chat history for initial page load')
+        chat_history = db_conn.load_context(
+            session['UUID'], 
+            table_name='chat_history'
+            )
 
-    # Convert the DataFrame to a JSON object
-    chat_history_json = chat_history.to_dict(orient='records')
-
-    db.create_connection()
-    # This assumes unique session names
-    s_uuid, s_name, s_date, s_src = db.query_db(
-        f"SELECT * FROM session WHERE session_name = '{session['SESSION_NAME']}'"
-        )[0]
-    db.close_connection()
-    
-
-    if chat_history.empty:
-        # If chat history is empty it means this is the first interaction
-        # we need to insert the baseline exchange   
-        db.create_connection(prm.DB_PATH)
-        
+    # If chat history is empty it means this is the first interaction
+    # we need to insert the baseline exchange   
+    if chat_history.empty:    
         #insert baseline interaction
-        db.insert_interaction(
-            session['SESSION_NAME'], 
-            'user',
-            prm.SUMMARY_CTXT_USR
-        )
-        db.insert_interaction(
-            session['SESSION_NAME'], 
-            'assistant',
-            prm.SUMMARY_TXT_ASST
-        )
-        db.close_connection()
+        with db as db_conn:
+            print('!Inserting baseline interaction')
+            db_conn.insert_interaction(
+                session['UUID'],
+                'user',
+                prm.SUMMARY_CTXT_USR
+            )
+            db_conn.insert_interaction(
+                session['UUID'],
+                'assistant',
+                prm.SUMMARY_TXT_ASST
+            )
+    else:
+        # Remove seed interactions from the chat history
+        chat_history = chat_history[chat_history['timestamp'] != 0]
+
+    # Convert the DataFrame to a JSON object so we can pass it to the template
+    chat_history_json = chat_history.to_dict(orient='records')
 
     return render_template(
         'index.html',
-        session_name=s_name,
-        session_date=s_date,
-        session_source=s_src,
+        session_name=session['SESSION_NAME'],
+        session_date=session['SESSION_DATE'],
+        session_uuid=session['UUID'],
         chat_history=chat_history_json
         )
 
@@ -260,71 +243,58 @@ def index():
 def ask():
     """handle POST request from the form and return the response
     """
+
     data = request.get_json()
     question = data['question']
 
-    # Handle chat memory and context
-    print('Handling chat memory and context...')
-    db.create_connection(prm.DB_PATH)
-    # Get the context table
-    recall_table = db.load_context(session['SESSION_NAME'])
-    db.close_connection()
-    
-    ## Chop recall table to only include contexts for sources, user, or assistant
-    src_f = (recall_table['interaction_type'] == 'source')
-    usr_f = (recall_table['interaction_type'] == 'user') & (recall_table['timestamp']!=0)
-    ast_f = (recall_table['interaction_type'] == 'assistant') & (recall_table['timestamp']!=0)
-    
-    recall_table_source = recall_table[src_f]
-    recall_table_user = recall_table[usr_f]
-    recall_table_assistant = recall_table[ast_f]
 
-    # TODO: make a function in cproc out of that!!!
+    # Handle chat memory and context    
+    with db as db_conn:
+        print('!Loading chat history for interaction')
+        # Form recall tables
+        collections = db_conn.load_collections(session['UUID'])
+        recall_table_context = db_conn.load_context(collections)
+        recall_table_chat = db_conn.load_context(session['UUID'], table_name='chat_history')
+
+        # fetch embeddings from embeddings table for given doc uuids
+        recall_table_context = db_conn.load_embeddings(recall_table_context)
+        recall_table_chat = db_conn.load_embeddings(recall_table_chat)
+    
+    # Prepare recall tables for user and assistant
+    recall_table_source = recall_table_context
+    recall_table_user, recall_table_assistant = cproc.prepare_chat_recall(recall_table_chat)
+
     recal_embed_source = cproc.convert_table_to_dct(recall_table_source)
     recal_embed_user = cproc.convert_table_to_dct(recall_table_user)
     recal_embed_assistant = cproc.convert_table_to_dct(recall_table_assistant)
 
+
     ## Get the context from recall table that is the most similar to user input
-    num_samples = prm.NUM_SAMPLES # <- this defines how many samples we want to get from the source material
+    num_samples = prm.NUM_SAMPLES
     if recall_table_source.shape[0] < prm.NUM_SAMPLES:
         # This should happen for short documents otherwise this suggests a bug (usually with session name)
         num_samples = recall_table_source.shape[0]
-        print('WARNING! Source material is shorter than number of samples you want to get. Setting number of samples to the number of source material sections.')
+        print("""
+            !WARNING! Source material is shorter than number of samples you want to get. 
+            Setting number of samples to the number of source material sections.
+            """)
 
-    ## Get SRC context
-    if len(recal_embed_source) == 0:
-        recal_source = 'No context found'
-        print('WARNING! No source material found.')
-        idxs=[]
-    else:
-        # Get the context most relevant to user's question
-        recal_source_id = oai.order_document_sections_by_query_similarity(question, recal_embed_source)[0:num_samples]
-        if len(recal_source_id)>1:
-            # If recal source id is a list n>1, join the text from the list
-            idxs = [x[1] for x in recal_source_id]
-            recal_source = recall_table.loc[idxs]['text'].to_list()
-            recal_source = '| '.join(recal_source)
-        else: 
-            # Otherwise just get the text from the single index
-            idxs = recal_source_id[1]
-            recal_source = recall_table.loc[idxs]['text']
 
-    ## GET QRY context
-    # We get most relevant context from the user's previous messages here
-    if len(recal_embed_user) == 0:
-        recal_user = 'No context found'
-    else:
-        recal_user_id = oai.order_document_sections_by_query_similarity(question, recal_embed_user)[0][1]
-        recal_user = recall_table.loc[recal_user_id]['text']
+    # Get the closest index - This will update index attributes of chatbot object
+    # that are used later to retrieve text and page numbers
 
-    ## GET RPL context
-    # We get most relevant context from the agent's previous messages here
-    if len(recal_embed_assistant) == 0:
-        recal_agent = 'No context found'
-    else:
-        recal_agent_id = oai.order_document_sections_by_query_similarity(question, recal_embed_assistant)[0][1]
-        recal_agent = recall_table.loc[recal_agent_id]['text']
+    chatbot.retrieve_closest_idx(
+        question,
+        num_samples,
+        recal_embed_source,
+        recal_embed_user,
+        recal_embed_assistant
+    )
 
+    recal_source, recal_user, recal_agent = chatbot.retrieve_text(
+        recall_table_context,
+        recall_table_chat,
+    )
 
     # Look for agent and user messages in the interaction table that have the latest timestamp
     # We will put them in the context too.
@@ -333,26 +303,23 @@ def ask():
     if last_usr_max == 0:
         latest_user = 'No context found'
     else:
-        latest_user = recall_table_user[recall_table_user['timestamp']==last_usr_max]['text']
+        latest_user = recall_table_user[recall_table_user['timestamp']==last_usr_max]['text'].values[0]
 
     if last_asst_max == 0:
         latest_assistant = 'No context found'
     else:
-        latest_assistant = recall_table_assistant[recall_table_assistant['timestamp']==last_asst_max]['text']
+        latest_assistant = recall_table_assistant[recall_table_assistant['timestamp']==last_asst_max]['text'].values[0]
 
-    print('Done handling chat memory and context.')
+    print('!Done handling chat memory and context.')
     
     ## Grab the page number from the recall table
     ## It will become handy when user wants to know from which chapter the context was taken
 
-    if len(idxs)>1:
-        recall_source_pages = recall_table.loc[idxs]['page'].to_list()
-    elif len(idxs)==1:
-        recall_source_pages = recall_table.loc[idxs]['page']
-    else:
-        recall_source_pages = 'No context found'
+    recall_source_pages = recall_table_context.loc[chatbot.recall_source_idx][['page','text']]
+    print(f'I will base on the following context:')
+    print(recall_source_pages)
+    print('\n')
 
-    print(f'I will answer your question basing on the following context: {set(recall_source_pages)}')
 
     # Build prompt
     message = chatbot.build_prompt(
@@ -365,15 +332,20 @@ def ask():
         )
     print("!Prompt built")
 
+
     # Grab call user content from messages alias
     usr_message_content = message[0]['content']
 
     # Count number of tokens in user message and display it to the user
     # TODO: flash it on the front-end
-    token_passed = oai.num_tokens_from_messages(message)
-    context_capacity =  4096 - token_passed
-    print(f"Number of tokens passed to the model: {token_passed}")
-    print(f"Number of tokens left in the context: {context_capacity}")
+    
+    #TODO: bug with message passed to encoder!
+    
+    token_passed = len('; '.join([x['content'] for x in message]))
+    context_capacity = 16384 - token_passed
+    # context_capacity =  4096 - token_passed
+    print(f'# Tokens passed to the model: {token_passed}')
+    print(f'# Tokens left in the context: {context_capacity}')
 
 
     # generate response
@@ -383,21 +355,21 @@ def ask():
 
     # save it all to DB so the agent can remember the conversation
     session['SPOT_TIME'] = str(int(time.time()))
-    db.create_connection()
-    # Insert user message into DB so we can use it for another user's input
-    db.insert_interaction(
-        session['SESSION_NAME'], 
-        'user',
-        question,
-        timestamp=session['SPOT_TIME']
-    )
-    db.insert_interaction(
-        session['SESSION_NAME'], 
-        'assistant',
-        response['choices'][0]['message']['content'],
-        timestamp=response['created']
-    )
-    db.close_connection()
+    with db as db_conn:
+        print('!Inserting interaction into DB')
+        # Insert user message into DB so we can use it for another user's input
+        db_conn.insert_interaction(
+            session['UUID'],
+            'user',
+            question,
+            timestamp=session['SPOT_TIME']
+        )
+        db_conn.insert_interaction(
+            session['UUID'],
+            'assistant',
+            response['choices'][0]['message']['content'],
+            timestamp=response['created']
+        )
 
     return jsonify({'response': response})
 
@@ -408,10 +380,11 @@ def export_interactions():
     """
 
     # Connect to the database
-    db.create_connection()
-    # Retrieve the interaction table
-    recall_df = db.load_context(session['SESSION_NAME'])
-    db.close_connection()
+    with db as db_conn:
+        print('!Loading chat history for export')
+        # Retrieve the interaction table
+        recall_df = db_conn.load_context(session['UUID'], table_name='chat_history')
+
     # remove records that are user or assistant interaction type and have 
     # time signature 0 - these were injected into the table as a seed to 
     # improve performance of the model at the beginning of the conversation
@@ -444,6 +417,33 @@ def open_browser():
 
 
 if __name__ == '__main__':
+
+    ## Load key from api_key.txt
+    with open('./api_key.txt') as f:
+        key_ = f.read()
+        openai.api_key = key_
+
+
+    # Intitiate database if not exist
+    db_exist = os.path.exists(prm.DB_PATH)
+    print(f'!Database exists: {db_exist}')
+    if not db_exist:
+        # Initialize the database
+        db = DatabaseHandler(prm.DB_PATH)
+        with db as db_conn:
+            db_conn.write_db(prm.SESSION_TABLE_SQL)
+            db_conn.write_db(prm.COLLECTIONS_TABLE_SQL)
+            db_conn.write_db(prm.CHAT_HIST_TABLE_SQL)
+            db_conn.write_db(prm.EMBEDDINGS_TABLE_SQL)
+    else:
+        # Initialize the database
+        db = DatabaseHandler(prm.DB_PATH)
+
+    # Spin up chatbot instance
+    chatbot = Chatbot()
+    print("!Chatbot initialized")
+
+
     # Run DEV server
     # app.run(debug=True, host='0.0.0.0', port=5000)
 

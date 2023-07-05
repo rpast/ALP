@@ -1,11 +1,14 @@
+"""Content processing utilities
+"""
+
 import re 
-import ast
 import uuid
 import pickle
 import pandas as pd
 
 import params as prm
-from oai_tool import num_tokens_from_messages, get_embedding
+
+from ai_tools import get_embedding_gpt, get_embedding_sbert, get_tokens, decode_tokens
 
 
 ## Various processors
@@ -51,8 +54,10 @@ def long_date_to_short(date):
     date = date.split(' ')[0]
     return date
 
+
 def create_uuid():
     return str(uuid.uuid4())
+
 
 def pages_to_dict(pages):
     """convert langchain.docstore.document.Document to dict"""
@@ -65,103 +70,110 @@ def pages_to_dict(pages):
 
 
 def pages_to_dataframe(pages):
-    """Convert dictionary of pages to dataframe"""
+    """Convert dictionary of pages to Pandas dataframe"""
     pages_dct = pages_to_dict(pages)
     # # Grab contents into a dataframe
     doc_contents_df = pd.DataFrame(pages_dct, index=['contents']).T
 
-    # # Create a token count column
-    doc_contents_df['num_tokens_oai'] = doc_contents_df['contents'].apply(
-        lambda x: num_tokens_from_messages([{'message': x}])
-    )
-
-    doc_contents_df = doc_contents_df.reset_index().rename(columns={'index': 'page'})
-
     return doc_contents_df
 
 
-def split_contents(x):
-    """Split contents into number of chunks defined by split_factor
-    e.g. if split factor = 2 then split contents into 2 chunks
-    """
-    thres = int(len(x['contents'])/x['split_factor'])
-
-    return [x['contents'][i:i+thres] for i in range(0, len(x['contents']), thres)]
-
-
-def split_pages(pages_df, session_name):
+def split_pages(pages_df, method):
     """Split pages that are too long for the model
     prepare the contents to be embedded
     """
-    # For instances with token count > token_thres, split them so they fit model threshold so we could get their embeddings
-    # Calculate split factor for each chapter
-    pages_df['split_factor'] = 1
-    pages_df.loc[pages_df['num_tokens_oai']>prm.TOKEN_THRES, 'split_factor'] = round(pages_df['num_tokens_oai']/prm.TOKEN_THRES, 0)
 
-    # Split contents
-    pages_df['contents_split'] = pages_df.apply(
-        lambda x: split_contents(x), axis=1
+    pages_df['contents_tokenized'] = pages_df['contents'].apply(
+            lambda x: get_tokens(x, method=method)
         )
 
-    # Explode the split contents
-    pages_contents_long_df = pages_df.explode(
-        column='contents_split'
-    )[['contents_split']]
-
-    # Create a token count column (Again - this time for long table)
-    pages_contents_long_df['num_tokens_oai'] = pages_contents_long_df['contents_split'].apply(
-        lambda x: num_tokens_from_messages([{'message': x}])
+    # We want to split the contents_tokenized by counting the number of tokens and when it reaches the threshold, split it
+    pages_df['contents_tokenized'] = pages_df['contents_tokenized'].apply(
+        lambda x: [x[i:i+prm.TOKEN_THRES] for i in range(1, len(x), prm.TOKEN_THRES)]
     )
 
-    # Form text column for each fragment
-    pages_contents_long_df['text'] = "PAGE: " + pages_contents_long_df.index.astype(str) + " CONTENT: " + pages_contents_long_df['contents_split']
+    # At this point the tokenized text is split by set threshold into an n element list
+    # We want to explode that list into rows and perserve index that tracks the src page
+    pages_contents_long_df = pages_df.explode(
+        column='contents_tokenized'
+    )[['contents_tokenized']]
 
-    ## Drop rows where num_tokens_oai is less than 25
-    pages_contents_long_df = pages_contents_long_df[pages_contents_long_df['num_tokens_oai'] > 25].copy()
+    # track # of tokens in each text snippet
+    pages_contents_long_df['text_token_no'] = pages_contents_long_df['contents_tokenized'].apply(
+        lambda x: len(x)
+    )
 
-    # Further dataframe processing
-    pages_contents_long_df = (
-        pages_contents_long_df
-        .drop(columns=['contents_split']) # Drop contents_split column
-        .reset_index() # Reset index so chapter names are stored in columns
-        .rename(columns={'index': 'page', 'num_tokens_oai': 'text_token_no'}) # Rename index column to chapter
-        .assign(session_name=session_name) # Add session_name column
-        .assign(interaction_type='source') ## Add interaction type column
-        .assign(timestamp=0) # Add timestamp column
-        [['session_name', 'interaction_type', 'text', 'text_token_no', 'page', 'timestamp']]
-        )
+    # decode tokens back into text (SBERT default)
+    pages_contents_long_df['contents'] = pages_contents_long_df['contents_tokenized'].apply(
+        lambda x: decode_tokens(x, method=method)
+    )
 
     return pages_contents_long_df
 
 
+def prepare_for_embed(pages_df, collection_name, model):
+    """Pre-process dataframe that holds src pages to be embedded by chosen model
+    returns a dataframe with the following columns:
+    name, interaction_type, text, text_token_no, page, timestamp
+    """
+
+    # Form text column for each fragment, we will later use it as the source text for embedding
+    pages_df['text'] = "PAGE: " + pages_df.index.astype(str) + " CONTENT: " + pages_df['contents']
+
+    # Further dataframe processing
+    return (
+        pages_df
+        .reset_index() # Reset index so page numbers get stored in column
+        .rename(columns={'index': 'page'})
+        .assign(name=collection_name)
+        .assign(interaction_type='source')
+        .assign(timestamp=0)
+        .assign(embedding_model=model)
+        [['name', 'interaction_type', 'text', 'text_token_no', 'page', 'timestamp', 'embedding_model']]
+    )
+
+
 def embed_cost(pages_contents_long_df, price_per_k=0.0004):
-    """Calculate the cost of running the model to get embeddings"""
+    """Calculate the cost of running the Open AI model to get embeddings
+    """
     embed_cost = (pages_contents_long_df['text_token_no'].sum() / 1000) * price_per_k
     return embed_cost
 
 
-def embed_pages(pages_contents_long_df):
+def embed_pages(pages_contents_long_df, method):
     """Get embeddings for each page"""
+
     # Get embeddings for each page
-    pages_contents_long_df['embedding'] = pages_contents_long_df['text'].apply(
-        lambda x: get_embedding(x)
-    )
+    if method == 'openai':
+        print(f'!Sending pages to Open AI for embedding with {prm.OPENAI_MODEL}')
+        pages_contents_long_df['embedding'] = pages_contents_long_df['text'].apply(
+            lambda x: pickle.dumps(get_embedding_gpt(x))
+        )
+    elif method == 'SBERT':
+        print(f'!Embedding pages with {prm.SENTENCE_TRANSFORMER_MODEL}')
+        pages_contents_long_df['embedding'] = pages_contents_long_df['text'].apply(
+            lambda x: pickle.dumps(get_embedding_sbert(x))
+        )
 
     return pages_contents_long_df
 
 
 def convert_table_to_dct(table):
     """Converts table to dictionary of embeddings
-    As Pandas df.to_dict() makes every value a string we need to convert it to list of loats before passing it to the model
+    As Pandas df.to_dict() makes every value a string, 
+    we need to convert it to list of floats before passing it to the model
     """
     table_dct = table[['embedding']].to_dict()['embedding']
     for k, v in table_dct.items():
-        table_dct[k] = ast.literal_eval(v)
+        # table_dct[k] = ast.literal_eval(v)
+        table_dct[k] = v
     return table_dct
 
 
-def serialize_embedding(embedding: pd.DataFrame):
-    """Convert embedding to string to store in db
+def prepare_chat_recall(chat_table):
+    """Prepare chat recall table for chatbot memory build
     """
-    embedding['embedding'] = embedding['embedding'].apply(lambda x: pickle.dumps(x))
-    return embedding
+    usr_f = (chat_table['interaction_type'] == 'user')
+    ast_f = (chat_table['interaction_type'] == 'assistant')
+    
+    return chat_table[usr_f], chat_table[ast_f]
