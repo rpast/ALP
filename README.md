@@ -90,6 +90,7 @@ venvname\Scripts\activate.bat
 ```
 
 This should create ALP/venv/ directory and activate virtual environment.
+Naturally, you can use other programs to handle virtualenvs.
 
 4. **Install the required dependencies to virtual environment:**
 
