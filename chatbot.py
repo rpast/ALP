@@ -50,7 +50,7 @@ class Chatbot:
 
         #TODO: user can choose variant of GPT model
         api_response = openai.ChatCompletion.create(
-            model=prm.OPENAI_MODEL_16K,
+            model=prm.PROD_MODEL[0],
             messages=msg
         )
 
@@ -73,12 +73,7 @@ class Chatbot:
         else:
             # Get the context most relevant to user's question
             recall_source_id = ait.order_document_sections_by_query_similarity(q, src)[0:n]
-            if len(recall_source_id)>1:
-                # If recal source id is a list n>1, join the text from the list
-                self.recall_source_idx = [x[1] for x in recall_source_id]
-            else: 
-                # Otherwise just get the text from the single index
-                self.recall_source_idx = recall_source_id[1]
+            self.recall_source_idx = [x[1] for x in recall_source_id]
 
         ## GET QRY context
         # We get most relevant context from the user's previous messages here
@@ -107,6 +102,8 @@ class Chatbot:
             if self.recall_source_idx != []:
                 self.src_text = src.loc[self.recall_source_idx, 'text'].tolist()
                 self.src_text = '| '.join(self.src_text)
+            else:
+                print('WARNING! No indexes for source material found.')
 
 
         if self.recall_user_idx:

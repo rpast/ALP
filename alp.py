@@ -314,8 +314,7 @@ def ask():
     
     ## Grab the page number from the recall table
     ## It will become handy when user wants to know from which chapter the context was taken
-
-    recall_source_pages = recall_table_context.loc[chatbot.recall_source_idx][['page','text']]
+    recall_source_pages = recall_table_context.loc[chatbot.recall_source_idx][['name','page','text_token_no','text']]
     print(f'I will base on the following context:')
     print(recall_source_pages)
     print('\n')
@@ -342,14 +341,14 @@ def ask():
     #TODO: bug with message passed to encoder!
     
     token_passed = len('; '.join([x['content'] for x in message]))
-    context_capacity = 16384 - token_passed
-    # context_capacity =  4096 - token_passed
+    context_capacity = prm.PROD_MODEL[1] - token_passed
     print(f'# Tokens passed to the model: {token_passed}')
     print(f'# Tokens left in the context: {context_capacity}')
 
 
     # generate response
     response = chatbot.chat_completion_response(message)
+    # formatted_response = response.replace('\n', '<br>')
     print("!Response generated")
 
 
@@ -445,8 +444,8 @@ if __name__ == '__main__':
 
 
     # Run DEV server
-    # app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
 
     # run PROD server
-    Timer(1, open_browser).start()
-    serve(app, host='0.0.0.0', port=5000)
+    # Timer(1, open_browser).start()
+    # serve(app, host='0.0.0.0', port=5000)
