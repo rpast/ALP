@@ -117,11 +117,8 @@ def prepare_for_embed(pages_df, collection_name, model):
     name, interaction_type, text, text_token_no, page, timestamp
     """
 
-    # Form text column for each fragment, we will later use it as the source text for embedding
-    pages_df['text'] = "PAGE: " + pages_df.index.astype(str) + " CONTENT: " + pages_df['contents']
-
     # Further dataframe processing
-    return (
+    pages_df = (
         pages_df
         .reset_index() # Reset index so page numbers get stored in column
         .rename(columns={'index': 'page'})
@@ -131,6 +128,10 @@ def prepare_for_embed(pages_df, collection_name, model):
         .assign(embedding_model=model)
         [['name', 'interaction_type', 'text', 'text_token_no', 'page', 'timestamp', 'embedding_model']]
     )
+    # Form text column for each fragment, we will later use it as the source text for embedding
+    pages_df['text'] = "SRC:" + pages_df['name'] + "PAGE: " + pages_df.index.astype(str) + " CONTENT: " + pages_df['contents']
+
+    return pages_df
 
 
 def embed_cost(pages_contents_long_df, price_per_k=0.0004):

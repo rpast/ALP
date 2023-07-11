@@ -21,7 +21,7 @@ SESSION_TABLE_NAME = 'session'
 
 
 TOKEN_THRES = 500 # Number of tokens to split the document into chunks
-NUM_SAMPLES = 3 # Number of samples to take from the document
+NUM_SAMPLES = 7 # Number of samples to take from the document
 
 # List of available models
 OPENAI_MODEL = ('gpt-3.5-turbo', 4096)
@@ -32,7 +32,7 @@ OPENAI_MODEL_V4_32K = ('gpt-4-32k', 32768)
 OPENAI_MODEL_EMBEDDING = 'text-embedding-ada-002'
 SENTENCE_TRANSFORMER_MODEL = 'multi-qa-MiniLM-L6-cos-v1'
 
-# prod model
+# prod model << Set this param to change the model used in production
 PROD_MODEL = OPENAI_MODEL_V4
 
 

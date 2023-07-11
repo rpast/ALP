@@ -13,6 +13,7 @@ import cont_proc as cproc
 import params as prm
 from chatbot import Chatbot
 from db_handler import DatabaseHandler
+from ai_tools import get_tokens
 
 # Serve to prod
 import webbrowser
@@ -340,7 +341,8 @@ def ask():
     
     #TODO: bug with message passed to encoder!
     
-    token_passed = len('; '.join([x['content'] for x in message]))
+    text_passed = '; '.join([x['content'] for x in message])
+    token_passed = len(get_tokens(text_passed))
     context_capacity = prm.PROD_MODEL[1] - token_passed
     print(f'# Tokens passed to the model: {token_passed}')
     print(f'# Tokens left in the context: {context_capacity}')
