@@ -6,9 +6,9 @@ import uuid
 import pickle
 import pandas as pd
 
-import params as prm
+import lib.params as prm
 
-from ai_tools import get_embedding_gpt, get_embedding_sbert, get_tokens, decode_tokens
+from lib.ai_tools import get_embedding_gpt, get_embedding_sbert, get_tokens, decode_tokens
 
 
 ## Various processors

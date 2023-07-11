@@ -4,7 +4,7 @@
 import tiktoken
 import openai
 import time
-import params as prm
+import lib.params as prm
 import numpy as np
 
 from sentence_transformers import SentenceTransformer

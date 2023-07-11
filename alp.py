@@ -9,11 +9,11 @@ from flask import Flask, request, session, render_template, redirect, url_for, j
 from langchain.document_loaders import PyPDFLoader
 
 ## Local modules import
-import cont_proc as cproc
-import params as prm
-from chatbot import Chatbot
-from db_handler import DatabaseHandler
-from ai_tools import get_tokens
+import lib.cont_proc as cproc
+import lib.params as prm
+from lib.chatbot import Chatbot
+from lib.db_handler import DatabaseHandler
+from lib.ai_tools import get_tokens
 
 # Serve to prod
 import webbrowser
@@ -449,8 +449,8 @@ if __name__ == '__main__':
 
 
     # Run DEV server
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # app.run(debug=True, host='0.0.0.0', port=5000)
 
     # run PROD server
-    # Timer(1, open_browser).start()
-    # serve(app, host='0.0.0.0', port=5000)
+    Timer(1, open_browser).start()
+    serve(app, host='0.0.0.0', port=5000)

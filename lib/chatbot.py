@@ -3,8 +3,8 @@
 
 import openai
 import pandas as pd
-import ai_tools as ait
-import params as prm
+import lib.ai_tools as ait
+import lib.params as prm
 
 class Chatbot:
     """Generic chatbot class

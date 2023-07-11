@@ -7,8 +7,8 @@ import pickle
 import pandas as pd
 
 # import params as prm
-from ai_tools import get_embedding_sbert, get_tokens
-from cont_proc import create_uuid
+from lib.ai_tools import get_embedding_sbert, get_tokens
+from lib.cont_proc import create_uuid
 
 
 class DatabaseHandler:
