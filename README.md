@@ -63,6 +63,8 @@ To set up ALP on your local machine, follow these steps:
 
 Make sure you have Python installed on your machine. I recommend [Anaconda](https://www.anaconda.com/products/distribution) for an easy setup.
 
+__Important:__ ALP runs on Python 3.10
+
 2. **Fork and clone the repository:**
 
 After forking the repo clone it in a command line:
