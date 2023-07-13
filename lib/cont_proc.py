@@ -117,6 +117,8 @@ def prepare_for_embed(pages_df, collection_name, model):
     name, interaction_type, text, text_token_no, page, timestamp
     """
 
+    return_cols=['name', 'interaction_type', 'text', 'text_token_no', 'page', 'timestamp', 'embedding_model']
+
     # Further dataframe processing
     pages_df = (
         pages_df
@@ -126,12 +128,11 @@ def prepare_for_embed(pages_df, collection_name, model):
         .assign(interaction_type='source')
         .assign(timestamp=0)
         .assign(embedding_model=model)
-        [['name', 'interaction_type', 'text', 'text_token_no', 'page', 'timestamp', 'embedding_model']]
     )
     # Form text column for each fragment, we will later use it as the source text for embedding
     pages_df['text'] = "SRC:" + pages_df['name'] + "PAGE: " + pages_df.index.astype(str) + " CONTENT: " + pages_df['contents']
 
-    return pages_df
+    return pages_df[return_cols]
 
 
 def embed_cost(pages_contents_long_df, price_per_k=0.0004):
