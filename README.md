@@ -136,6 +136,8 @@ ALP app interface consists of couple of sections:
 <img src='https://github.com/rpast/ALP/blob/dmodel_updt/static/chat1.png?raw=true' width='600'></src>
 <br>
 <img src='https://github.com/rpast/ALP/blob/dmodel_updt/static/chat2.png?raw=true' width='600'></src>
+<br>
+<img src='https://github.com/rpast/ALP/blob/master/static/chat3.png?raw=true' width='600'></src>
 
 
 
