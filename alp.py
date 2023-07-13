@@ -352,8 +352,8 @@ def ask():
     response = chatbot.chat_completion_response(message)
 
     # Format the response so it can be displayed in the front-end
-    formatted_cont = response['choices'][0]['message']['content'].replace('\n', '<br>')
-    response['choices'][0]['message']['content'] = formatted_cont
+    # formatted_cont = response['choices'][0]['message']['content'].replace('\n', '<br>')
+    response['choices'][0]['message']['content'] = cproc.format_response(response)
     print("!Response generated")
 
 

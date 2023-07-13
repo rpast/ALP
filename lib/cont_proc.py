@@ -179,3 +179,18 @@ def prepare_chat_recall(chat_table):
     ast_f = (chat_table['interaction_type'] == 'assistant')
     
     return chat_table[usr_f], chat_table[ast_f]
+
+def format_response(response):
+    """Grab generator response and format it for display in the chatbot
+    :param response: dict
+    """
+    code_pattern = r'```(.*?)```'
+    cont = response['choices'][0]['message']['content']
+
+    # Replace newlines with <br> tags
+    cont_interim = cont.replace('\n', '<br>')
+    
+    # Use a lambda function to replace detected code with code wrapped in <pre> tags
+    new_cont = re.sub(code_pattern, lambda match: '<pre>' + match.group(1) + '</pre>', cont_interim, flags=re.DOTALL)
+
+    return new_cont
