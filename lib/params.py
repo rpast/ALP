@@ -7,9 +7,8 @@ from pathlib import Path
 
 ## General parameters ##
 STATIC_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
-DB_FOLDER = os.path.join(STATIC_FOLDER, "data", "dbs")
-UPLOAD_FOLDER = os.path.join(STATIC_FOLDER, "data", "uploads")
 
+STATIC_FOLDER = Path('./static')
 DB_FOLDER = Path(f'./static/data/dbs')
 UPLOAD_FOLDER = Path(f'./static/data/uploads')
 
@@ -35,6 +34,8 @@ SENTENCE_TRANSFORMER_MODEL = 'multi-qa-MiniLM-L6-cos-v1'
 # prod model << Set this param to change the model used in production
 PROD_MODEL = OPENAI_MODEL_V4
 
+# Set path to agent system messages
+AGENT_INFO_PTH = Path(STATIC_FOLDER) / 'data' / 'simulacra.json'
 
 # Model context management
 SUMMARY_CTXT_USR = """

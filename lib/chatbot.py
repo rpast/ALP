@@ -2,6 +2,7 @@
 """
 
 import openai
+import json
 import pandas as pd
 import lib.ai_tools as ait
 import lib.params as prm
@@ -10,19 +11,21 @@ class Chatbot:
     """Generic chatbot class
     """
 
-    def __init__(self):
-        self.sys_message = {
-            'role': 'system',
-            'content':  """
-                You are a helpful assistant. You provide only factual information base don provided context. 
-                When you do not know the answer, you say it. 
-                Wherever you can, you provide source name and page numbers in brackets (SRC: <name>, PAGE: <pages>).
-                I will provide my query after INP tag. I will provide context you will use in your answer after following tags: 
-                SRC - context from source text we are talking about; 
-                QRY - one of previous inputs from current conversation that may be relevant to the current INP; 
-                RPL - one of your previous replies from current conversation that may be relevant to current INP.
-            """
-        }
+    def __init__(self, aname):
+        """Initializes chatbot class
+
+        parametrs:
+        aname - name of the agent ('robb' or 'agent')
+        """
+        self.agent = aname
+
+        #read json file from ./static/data into a python dictionary object
+        with open(prm.AGENT_INFO_PTH) as f:
+            agent_info = json.load(f)
+
+        #choose agent for chatbot sys message
+        self.sys_message = agent_info[self.agent]
+
 
     def build_prompt(self, 
                     prev_usr, 

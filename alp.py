@@ -335,6 +335,7 @@ def ask():
 
     # Grab call user content from messages alias
     usr_message_content = message[0]['content']
+    print(usr_message_content[:200])
 
     # Count number of tokens in user message and display it to the user
     # TODO: flash it on the front-end
@@ -444,13 +445,13 @@ if __name__ == '__main__':
         db = DatabaseHandler(prm.DB_PATH)
 
     # Spin up chatbot instance
-    chatbot = Chatbot()
+    chatbot = Chatbot('robb')
     print("!Chatbot initialized")
 
 
     # Run DEV server
-    # app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
 
     # # run PROD server
-    Timer(1, open_browser).start()
-    serve(app, host='0.0.0.0', port=5000)
+    # Timer(1, open_browser).start()
+    # serve(app, host='0.0.0.0', port=5000)
