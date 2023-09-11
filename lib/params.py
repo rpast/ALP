@@ -21,7 +21,7 @@ SESSION_TABLE_NAME = 'session'
 
 
 TOKEN_THRES = 500 # Number of tokens to split the document into chunks
-NUM_SAMPLES = 7 # Number of samples to take from the document
+NUM_SAMPLES = 3 # Number of samples to take from the document
 
 # List of available models
 OPENAI_MODEL = ('gpt-3.5-turbo', 4096)
