@@ -11,20 +11,27 @@ class Chatbot:
     """Generic chatbot class
     """
 
-    def __init__(self, aname):
+    def __init__(self):
         """Initializes chatbot class
 
         parametrs:
         aname - name of the agent ('robb' or 'agent')
         """
-        self.agent = aname
-
+        
         #read json file from ./static/data into a python dictionary object
         with open(prm.AGENT_INFO_PTH) as f:
-            agent_info = json.load(f)
+            self.simulacra = json.load(f)
 
+
+    def set_agent(self, aname):
+        """Sets Agent's role for the chatbot
+        """
+
+        self.agent = aname
         #choose agent for chatbot sys message
-        self.sys_message = agent_info[self.agent]
+        self.sys_message = self.simulacra[self.agent]
+        print("Agent set to: ", self.agent)
+
 
 
     def build_prompt(self, 

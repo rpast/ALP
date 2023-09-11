@@ -157,6 +157,12 @@ def process_session():
 
     #determine if use clicked session_create or session_start
     session_action = request.form.get('session_action', 0)
+    agent_name = request.form.get('agent_role', 0)
+
+    # Define Agent's role
+    session['AGENT_NAME'] = agent_name
+    chatbot.set_agent(session['AGENT_NAME'])
+
 
     # Determine if we deal with new or existing session
     # And handle session variables accordingly
@@ -233,6 +239,7 @@ def index():
 
     return render_template(
         'index.html',
+        agent_name=session['AGENT_NAME'],
         session_name=session['SESSION_NAME'],
         session_date=session['SESSION_DATE'],
         session_uuid=session['UUID'],
@@ -333,9 +340,9 @@ def ask():
     print("!Prompt built")
 
 
-    # Grab call user content from messages alias
+    # Grab call user content from messages alias - debugging
     usr_message_content = message[0]['content']
-    print(usr_message_content[:200])
+    # print(usr_message_content[:200])
 
     # Count number of tokens in user message and display it to the user
     # TODO: flash it on the front-end
@@ -445,7 +452,7 @@ if __name__ == '__main__':
         db = DatabaseHandler(prm.DB_PATH)
 
     # Spin up chatbot instance
-    chatbot = Chatbot('robb')
+    chatbot = Chatbot()
     print("!Chatbot initialized")
 
 

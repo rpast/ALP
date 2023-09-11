@@ -32,6 +32,16 @@
                     <form action="/process_session" method="post" enctype="multipart/form-data" class="form-container">
                         
                         <div class="form-group">
+                            <label for="agent_role">Select Agent role:</label>
+                            <select id="agent_role" name="agent_role">
+                                <option value="assistant" selected>Assistant</option>
+                                <option value="robb">Rob Burbea</option>
+                            </select>
+                        </div>
+
+                        <p>^^^</p>
+
+                        <div class="form-group">
                             <label for="existing_session">Select existing session:</label>
                             <select id="existing_session" name="existing_session_name">
                                 <option value="" selected>Session name</option>
