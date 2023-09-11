@@ -35,7 +35,8 @@ ALP is intended to be run via localhost 💻. All you need is Python and few com
 - 20230705 - new data model, SBERT based embeddings
 - 20230411 - interface upgrade, UX improvements, bugfixes
 - 20230406 - bug-fix that prevented program to initialize database under /static/data/dbs/; requirements.txt fix
-- 20230405 - program stores converastion history and allows to continue it
+- 20230405 - program stores converastion history
+- 20230911 - user can define custom agent behavior and choose them from the drop-down menu in session manager.
 
 ## Introduction
 ALP enhances the accuracy of responses of GPT-based models relative to given PDF documents by using a retrieval augmentation method. This approach ensures that the most relevant context is always passed to the model as a context to user's question. The intention behind ALP is to assist the overwhelming knowledge base of research papers, books and notes, making it easier to access and digest content.
@@ -48,11 +49,12 @@ Currently ALP utilizes following models:
 - **Conversational research assistant**: Interact with and get information from collections of pdf files.
 - **Unlimited conversational memory**: Retain information from previous conversations for context-aware responses.
 - **Come back to past conversations**: Pick up your conversation right where you left. 
-- **Flexible data model**: Allows for conversation with more than one document.
+- **Flexible data model**: Allows for conversation with more than one document in one session.
 - **Uses open source models**: [Sentence-Transformers](https://www.sbert.net/) allow for costless and fast text embedding.
-- **Support for long documents**: You can upload books. It takes ~10 minutes to embed ~300 page document. 
+- **Support for long documents**: You can upload long texts. It takes ~10 minutes to embed ~300 page document. 
 - **JSON export**: Export conversation as a JSON file.
 - **Retrieval augmentation**: Utilize retrieval augmentation techniques for improved accuracy. Read more [here](https://arxiv.org/pdf/2104.07567.pdf).
+- **Define your own agent behavior**: set system message defining your agents in ./static/data/simulacra.json. You can then easily adjust html form to choose names from a drop-down menu. 
 - **Local deployment**: Spin up ALP locally on your machine.
 - **Open source**: The code is yours to read, test and break and build upon. 
 
@@ -151,8 +153,8 @@ ALP app interface consists of couple of sections:
 - [x] Decouple conversation data from collection data
 - [x] Implement Sentence-Transformers for text embedding
 - [x] Display sources used by the agent for the answer
+- [x] Introduce various agents in the chatbot
 - [ ] User can delete unwanted converastions from database
-- [ ] Introduce various agents in the chatbot
 - [ ] User is able to upload text from sources other than pdf
 - [ ] Improve GUI design
 - [ ] Add Whisper for audio-text
