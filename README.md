@@ -84,14 +84,14 @@ For Linux users in Bash:
 
 ```bash 
 python3 -m venv venv
-source venvname/bin/activate
+source venv/bin/activate
 ```
 
 For Windows users in CMD:
 
 ```
 python -m venv venv
-venvname\Scripts\activate.bat
+venv\Scripts\activate.bat
 ```
 
 This should create ALP/venv/ directory and activate virtual environment.
