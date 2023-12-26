@@ -1,2 +1,0 @@
-dir to store uploaded .pdfs
-regular cleanup advised

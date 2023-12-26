@@ -6,12 +6,16 @@ import openai
 import time
 import lib.params as prm
 import numpy as np
+# import logging
 
 from sentence_transformers import SentenceTransformer
 from transformers import BertTokenizer
+from transformers import logging as hf_logging
+
+# to drop warnings from tokenizers
+hf_logging.set_verbosity_error()
 
 
-#TODO: bug - warning is printed even though we dont want it
 def get_tokens(message, method='SBERT'):
     """Count number of tokens in a message
     """

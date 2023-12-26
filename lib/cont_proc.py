@@ -130,7 +130,7 @@ def prepare_for_embed(pages_df, collection_name, model):
         .assign(embedding_model=model)
     )
     # Form text column for each fragment, we will later use it as the source text for embedding
-    pages_df['text'] = "SRC:" + pages_df['name'] + "PAGE: " + pages_df.index.astype(str) + " CONTENT: " + pages_df['contents']
+    pages_df['text'] = "SRC:" + pages_df['name'] + " PAGE: " + pages_df['page'].astype(str) + " CONTENT: " + pages_df['contents']
 
     return pages_df[return_cols]
 

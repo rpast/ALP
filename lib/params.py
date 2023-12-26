@@ -27,12 +27,13 @@ OPENAI_MODEL = ('gpt-3.5-turbo', 4096)
 OPENAI_MODEL_16K = ('gpt-3.5-turbo-16k', 16384)
 OPENAI_MODEL_V4 = ('gpt-4', 8192)
 OPENAI_MODEL_V4_32K = ('gpt-4-32k', 32768)
+OPENAI_MODEL_V4_1106 = ('gpt-4-1106-preview', 128000)
 
 OPENAI_MODEL_EMBEDDING = 'text-embedding-ada-002'
 SENTENCE_TRANSFORMER_MODEL = 'multi-qa-MiniLM-L6-cos-v1'
 
 # prod model << Set this param to change the model used in production
-PROD_MODEL = OPENAI_MODEL_V4
+PROD_MODEL = OPENAI_MODEL_V4_1106
 
 # Set path to agent system messages
 AGENT_INFO_PTH = Path(STATIC_FOLDER) / 'data' / 'simulacra.json'
