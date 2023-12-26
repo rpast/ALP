@@ -1,20 +1,13 @@
 # ALP
 
-## Version information
-
-This is a second iteration of the script. New features include:
-* New data model that decouples sessions (chat conversations) and collections (pdf resources). Thanks to that, user session can point to one or more pdf resource. Also, altering the conversation does not affect the embbeddings stored in the database. 
-* [SBERT](https://www.sbert.net/) provides embedding model instead of Open AI. This reduces costs and increases performance. Open AI's Ada left as a legacy model. 
-
-_1st iteration version bak on ALP_1st_iter_bak branch_
 
 ## Overview
 
-_ALP is an open-source, knowledge-grounded conversational AI system designed to generate responses grounded in relevant knowledge from external sources._ 📖💫
+_ALP is an open-source, knowledge-based conversational AI system, crafted to produce responses that are rooted in relevant information from external sources._ 📖💫
 
-ALP is currently in development, but it can be used locally on users' machines. Built with simplicity in mind, ALP reads chosen PDF file, has unlimited conversational memory and the ability to export conversation and source embeddings to JSON format.
+ALP allows you to build a large knowledge base that can be queried while interacting with a chatbot. Similarity based context constructions allows for better relevance of materials extracted from the database. The chatbot has unlimited conversational memory and the ability to export conversation and source embeddings to JSON format.
 
-ALP stores conversation history and embeddings in local SQLite database 🗄️. Thanks to that document upload and embedding process happens only once. This also allows a user to continue conversations.
+ALP maintains conversation history and embeddings in a local SQLite database 🗄️. As a result, document uploading and embedding processes are required only once, enabling users to resume conversations seamlessly.
 
 ALP is intended to be run via localhost 💻. All you need is Python and few commands to setup environment. Feel free to fork, explore the code, and adjust to your needs 🔧. 
 
@@ -32,18 +25,19 @@ ALP is intended to be run via localhost 💻. All you need is Python and few com
   - [Todo](#todo)
 
 ## Changelog
+- 20231226 - ```gpt-4-1106-preview``` added as default generative model. User can change it in ./lib/params.py in _PROD_MODEL_. Collection creation page count bug fix. 
+- 20230911 - define custom agent behavior in ./static/data/simulacra.json and choose them in session manager from a drop-down menu.
+- 20230406 - bug-fix that prevented program to initialize database under /static/data/dbs/; requirements.txt fix
 - 20230705 - new data model, SBERT based embeddings
 - 20230411 - interface upgrade, UX improvements, bugfixes
-- 20230406 - bug-fix that prevented program to initialize database under /static/data/dbs/; requirements.txt fix
 - 20230405 - program stores converastion history
-- 20230911 - user can define custom agent behavior and choose them from the drop-down menu in session manager.
 
 ## Introduction
-ALP enhances the accuracy of responses of GPT-based models relative to given PDF documents by using a retrieval augmentation method. This approach ensures that the most relevant context is always passed to the model as a context to user's question. The intention behind ALP is to assist the overwhelming knowledge base of research papers, books and notes, making it easier to access and digest content.
+ALP enhances the accuracy of responses of GPT-based models relative to given PDF documents by using a retrieval augmentation method. This approach ensures that the most relevant context is always passed to the model. The intention behind ALP is to assist exploration of the overwhelming knowledge base of research papers, books and notes, making it easier to access and digest content.
 
 Currently ALP utilizes following models:
 1. Text embedding: ```multi-qa-MiniLM-L6-cos-v1```
-2. Generation: ```gpt-3.5-turbo```. 
+2. Generation: ```gpt-4-1106-preview'```, ```gpt-4-32k```, ```gpt-4```, ```gpt-3.5-turbo-16k```, ```gpt-3.5-turbo```. 
 
 ## Features
 - **Conversational research assistant**: Interact with and get information from collections of pdf files.
@@ -51,11 +45,11 @@ Currently ALP utilizes following models:
 - **Come back to past conversations**: Pick up your conversation right where you left. 
 - **Flexible data model**: Allows for conversation with more than one document in one session.
 - **Uses open source models**: [Sentence-Transformers](https://www.sbert.net/) allow for costless and fast text embedding.
-- **Support for long documents**: You can upload long texts. It takes ~10 minutes to embed ~300 page document. 
-- **JSON export**: Export conversation as a JSON file.
+- **Support for long documents**: upload books and other lengthy pdfs.
 - **Retrieval augmentation**: Utilize retrieval augmentation techniques for improved accuracy. Read more [here](https://arxiv.org/pdf/2104.07567.pdf).
 - **Define your own agent behavior**: set system message defining your agents in ./static/data/simulacra.json. You can then easily adjust html form to choose names from a drop-down menu. 
 - **Local deployment**: Spin up ALP locally on your machine.
+- **JSON export**: Export conversation as a JSON file.
 - **Open source**: The code is yours to read, test and break and build upon. 
 
 ## Installation
@@ -105,7 +99,7 @@ pip install -r requirements.txt
 
 ## Configuration
 By default, ALP runs in `localhost`. It requires API key to connect with GPT model via Open AI API. 
-in the ALP/ directory create an api_key.txt and paste your API key there. You can get your API key here https://platform.openai.com 🌐
+in the ALP/ directory create an api_key.txt and paste your API key there. Make sure api_key.txt is added to your .gitignore file so it doesnt leak to github. You can get your Open AI API key here https://platform.openai.com 🌐
 
 
 ## Usage
@@ -118,17 +112,20 @@ python alp.py
 6. **Access the application:**
    
 The app should open in your default web browser. If it doesn't, navigate to http://localhost:5000.
-First use involves creation of app.db file under ALP/static/data/dbs/. This is your SQLite database file that will hold conversation history and embeddings. Also, the script will download _'multi-qa-MiniLM-L6-cos-v1'_ (80 MB) to your PC from Hugging Face repositories. It will happen only once.
+First use involves creation of app.db file under ALP/static/data/dbs/. This is your SQLite database file that will hold conversation history and embeddings. Also, the script will download _'multi-qa-MiniLM-L6-cos-v1'_ (80 MB) to your PC from Hugging Face repositories. It will happen automatically on a first launch.
 
 
 7. **Start using ALP:**
 
 ALP app interface consists of couple of sections:
 
-* ALP - HUB allows you to create new collection under 'Collections' or create/continue conversation session under 'Sessions'.
-* In ALP - COLLECTIONS MANAGER you can create a new collection by specifying its name and uploading a pdf file. 
-* In ALP - SESSION MANAGER you can continue existing session by selecting it from dropdown and hitting 'Start'. You can create a new session there as well by defining its name and selecting collections linked to the session.
-* In ALP - SESSION window you can have a conversation over collections linked to the session. Each time a similarity score is calculated between user's query and collections' embeddings, a list of most similar datasources is printed in the program's console. These sources will be passed as a context with the user's question to the GPT model.
+* HUB allows you to create new collection under 'Collections' or create/continue conversation session under 'Sessions'.
+* COLLECTIONS MANAGER: create a new collection by specifying its name and uploading a pdf file. 
+* SESSION MANAGER: 
+  * continue existing session by selecting it from dropdown and hitting 'Start'.
+  * create a new session there as well by defining its name and selecting collections linked to the session. 
+  * Select predefined agent role for the conversation. Works also for historical chats.
+* SESSION window: talk to GPT model over collections linked to the session. Each time a similarity score is calculated between user's query and collections' embeddings, a list of most similar datasources is printed in the program's console. These sources will be passed as a context with the user's question to the GPT model.
 
 ## Screenshots
 <img src='https://github.com/rpast/ALP/blob/dmodel_updt/static/alp-hub.png?raw=true' width='600'></src>
@@ -155,6 +152,7 @@ ALP app interface consists of couple of sections:
 - [x] Display sources used by the agent for the answer
 - [x] Introduce various agents in the chatbot
 - [ ] User can delete unwanted converastions from database
+- [ ] Global settings menu (currently in params.py)
 - [ ] User is able to upload text from sources other than pdf
 - [ ] Improve GUI design
 - [ ] Add Whisper for audio-text

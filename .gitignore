@@ -10,6 +10,7 @@ _archive/
 api_key.txt
 devlog.txt
 db_schema.txt
+bash_utils
 
 # virtualenv
 alp_venv/
