@@ -432,7 +432,7 @@ if __name__ == '__main__':
 
     ## Load key from api_key.txt
     with open('./api_key.txt') as f:
-        key_ = f.read()
+        key_ = f.read().replace('\n','') #remove trailing '\n'
         openai.api_key = key_
 
 
