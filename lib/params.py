@@ -23,17 +23,14 @@ TOKEN_THRES = 500 # Number of tokens to split the document into chunks
 NUM_SAMPLES = 5 # Number of samples to take from the document
 
 # List of available models
-OPENAI_MODEL = ('gpt-3.5-turbo', 4096)
-OPENAI_MODEL_16K = ('gpt-3.5-turbo-16k', 16384)
-OPENAI_MODEL_V4 = ('gpt-4', 8192)
-OPENAI_MODEL_V4_32K = ('gpt-4-32k', 32768)
-OPENAI_MODEL_V4_1106 = ('gpt-4-1106-preview', 128000)
+OPENAI_MODEL_4O = ('gpt-4o', 128000)
+OPENAI_MODEL_4O_MINI = ('gpt-4o-mini', 128000)
 
 OPENAI_MODEL_EMBEDDING = 'text-embedding-ada-002'
 SENTENCE_TRANSFORMER_MODEL = 'multi-qa-MiniLM-L6-cos-v1'
 
 # prod model << Set this param to change the model used in production
-PROD_MODEL = OPENAI_MODEL_V4_1106
+PROD_MODEL = OPENAI_MODEL_4O_MINI
 
 # Set path to agent system messages
 AGENT_INFO_PTH = Path(STATIC_FOLDER) / 'data' / 'simulacra.json'

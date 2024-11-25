@@ -25,6 +25,7 @@ ALP is intended to be run via localhost 💻. All you need is Python and few com
   - [Todo](#todo)
 
 ## Changelog
+- 20240815 - model list updated to: ```gpt-4o'```, ```gpt-4o-mini```
 - 20231226 - ```gpt-4-1106-preview``` added as default generative model. User can change it in ./lib/params.py in _PROD_MODEL_. Collection creation page count bug fix. 
 - 20230911 - define custom agent behavior in ./static/data/simulacra.json and choose them in session manager from a drop-down menu.
 - 20230406 - bug-fix that prevented program to initialize database under /static/data/dbs/; requirements.txt fix
@@ -37,7 +38,7 @@ ALP enhances the accuracy of responses of GPT-based models relative to given PDF
 
 Currently ALP utilizes following models:
 1. Text embedding: ```multi-qa-MiniLM-L6-cos-v1```
-2. Generation: ```gpt-4-1106-preview'```, ```gpt-4-32k```, ```gpt-4```, ```gpt-3.5-turbo-16k```, ```gpt-3.5-turbo```. 
+2. Generation: ```gpt-4o'```, ```gpt-4o-mini```
 
 ## Features
 - **Conversational research assistant**: Interact with and get information from collections of pdf files.
