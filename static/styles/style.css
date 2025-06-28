@@ -29,12 +29,13 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-width: 800px;
+    min-width: 100px;
     border: 2px solid #000000;
-    border-radius: 0;
-    width: 50%;
+    border-radius: 10px;
+    margin: 0 2em 0 0;
+    /* width: 20%; */
     max-width: 1000px;
-    box-shadow: #000000 10px 10px 0px -2px;
+    box-shadow: #222222 10px 10px 0px -2px;
 }
 
 .card-header {
@@ -44,11 +45,12 @@ body {
     width: 100%;
     justify-content: flex-start;
     align-items: flex-start;
-    background-color: rgba(0, 0, 0, 0.158);
+    background-color: #e5e5e5;
     color: rgb(0, 0, 0);
     border-bottom: 2px solid #000000;
-    border-radius: 0 !important;
+    /* border-radius: 0 !important; */
 }
+
 .container-menu {
     display: flex;
     flex-direction: row;
@@ -106,8 +108,58 @@ a {
     margin: 0 0 2em 0;
 }
 
+.sources-pane {
+    /* width: 15%; */
+    max-width: 800px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 1.5em 0
+}
+
+.viewer-pane {
+    width: 100%;
+    max-width: 800px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.pdf-viewer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+}
+
+.src-container {
+    width: 10%;
+    max-width: 800px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow-y: auto;
+}
+.view-container {
+    /* width: 100%; */
+    max-width: 800px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0
+}
 .chat-container {
-    width: 70%;
+    width: 45%;
     max-width: 800px;
     height: 100%;
     display: flex;
@@ -125,6 +177,15 @@ a {
     overflow-y: hidden;
 }
 
+.view-box {
+    flex-grow: 1;
+    width: 100%;
+    /* border-bottom: 2px solid #000000; */
+    border-radius: 0;
+    padding: 1em 0em 1em 0em;
+    overflow-y: hidden;
+}
+
 .response-container {
     width: 100%;
     height: 100%;
@@ -134,6 +195,17 @@ a {
     justify-content: flex-start;
     overflow-y: auto;
     padding: 0em 1em 2em 1em; 
+}
+
+.view-container {
+    width: 100%;
+    height: 100%;
+    /* height: calc(90vh - 6em); Set the height to 90% of the viewport height minus the space taken by the input container and other elements */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow-y: auto;
+    padding: 0em 1em 0em 1em; 
 }
 
 .input-container {

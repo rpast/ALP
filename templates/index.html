@@ -24,12 +24,35 @@
 
         <div class="container-interface">
 
+            <div class="src-container card">
+                
+                <div class="sources-pane">
+                    <p>Source 1</p>
+                    <p>Source 2</p>
+                    <p>Source 3</p>
+                </div>
+            </div>
+                
+            <div class="view-container card">
+                
+                <div class="viewer-pane">
+                    
+                    <div class="view-box">
+                            <iframe src="/static/data/example.pdf" class="pdf-viewer"></iframe>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            
             <div class="chat-container card">
+
                 <div class="card-header">
                     <p>
-                        ALP - SESSION: {{session_name}}; DATE: {{session_date}}; AGENT: {{agent_name}}
+                        SESSION: {{session_name}}; DATE: {{session_date}}; AGENT: {{agent_name}}
                     </p>
                 </div>
+
                 <div class="chat-box">
                     <div class="response-container">
                         <div id="response"></div>

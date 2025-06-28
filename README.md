@@ -1,6 +1,18 @@
 # ALP
 
 
+## /source-reader <span style="color:blue">DEV</span>
+
+Work In Progress: User can read sources while chatting with the bot. Sources are displayed in a separate pane on the left side of the chat window. The pane is scrollable and allows for easy navigation through the sources used by the bot to generate responses. 
+Features in the backlog:
+1. The user can click on a source to view its content in a dedicated viewer pane.
+2. The is able to send a text snippet from the source to a chat window, allowing for more interactive conversations. 
+3. Chatbot can take user directly to the snippet in the source, allowing for quick access to relevant information.
+
+<img src='./static/src_reader_demo.png' width='600'></src>
+<br>
+
+
 ## Overview
 
 _ALP is an open-source, knowledge-based conversational AI system, crafted to produce responses that are rooted in relevant information from external sources._ 📖💫
@@ -155,5 +167,4 @@ ALP app interface consists of couple of sections:
 - [ ] User can delete unwanted converastions from database
 - [ ] Global settings menu (currently in params.py)
 - [ ] User is able to upload text from sources other than pdf
-- [ ] Improve GUI design
 - [ ] Add Whisper for audio-text
