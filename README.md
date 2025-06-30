@@ -27,6 +27,7 @@ ALP is intended to be run via localhost 💻. All you need is Python and few com
   - [Todo](#todo)
 
 ## Changelog
+- 20250628 - source-reader dev branch created.
 - 20240815 - model list updated to: ```gpt-4o'```, ```gpt-4o-mini```
 - 20231226 - ```gpt-4-1106-preview``` added as default generative model. User can change it in ./lib/params.py in _PROD_MODEL_. Collection creation page count bug fix. 
 - 20230911 - define custom agent behavior in ./static/data/simulacra.json and choose them in session manager from a drop-down menu.
@@ -131,13 +132,9 @@ ALP app interface consists of couple of sections:
 * SESSION window: talk to GPT model over collections linked to the session. Each time a similarity score is calculated between user's query and collections' embeddings, a list of most similar datasources is printed in the program's console. These sources will be passed as a context with the user's question to the GPT model.
 
 ## Screenshots
-<img src='https://github.com/rpast/ALP/blob/dmodel_updt/static/alp-hub.png?raw=true' width='600'></src>
+<img src='https://github.com/rpast/ALP/blob/master/static/alp-hub.png?raw=true' width='600'></src>
 <br>
-<img src='https://github.com/rpast/ALP/blob/dmodel_updt/static/alp-session-mgr.png?raw=true' width='600'></src>
-<br>
-<img src='https://github.com/rpast/ALP/blob/dmodel_updt/static/chat1.png?raw=true' width='600'></src>
-<br>
-<img src='https://github.com/rpast/ALP/blob/dmodel_updt/static/chat2.png?raw=true' width='600'></src>
+<img src='https://github.com/rpast/ALP/blob/master/static/alp-session-mgr.png?raw=true' width='600'></src>
 <br>
 <img src='https://github.com/rpast/ALP/blob/master/static/chat3.png?raw=true' width='600'></src>
 
